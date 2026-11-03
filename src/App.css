@@ -1,0 +1,441 @@
+/* ==========================================
+   BEGUR PLAGES — VERSION 0.2
+   Petit guide local, esprit Web 2005
+   ========================================== */
+
+/* Couleurs et réglages généraux */
+
+:root {
+  font-family: Verdana, Geneva, sans-serif;
+  color: #293b43;
+  background-color: #f6f3e9;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  display: block;
+  background: #f6f3e9;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: #176b91;
+  text-decoration: underline;
+}
+
+/* ==========================================
+   STRUCTURE GÉNÉRALE
+   ========================================== */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  width: 100%;
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+  flex: 1;
+}
+
+/* ==========================================
+   BANDEAU SUPÉRIEUR
+   ========================================== */
+
+.site-header {
+  background: #f2d77b;
+  border-bottom: 3px solid #d4ad43;
+  padding: 20px 16px;
+}
+
+.header-inner {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.site-header h1 {
+  margin: 0 0 7px;
+  color: #24576c;
+  font-size: 29px;
+  font-weight: bold;
+  letter-spacing: -0.7px;
+}
+
+.site-header p {
+  margin: 0;
+  color: #645b40;
+  font-size: 13px;
+}
+
+/* ==========================================
+   INTRODUCTION
+   ========================================== */
+
+.intro {
+  margin-bottom: 20px;
+}
+
+.intro h2 {
+  margin: 0 0 9px;
+  font-size: 21px;
+  color: #24576c;
+}
+
+.intro p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #657278;
+}
+
+/* ==========================================
+   ONGLETS LISTE / CARTE
+   ========================================== */
+
+.tabs {
+  display: flex;
+  gap: 5px;
+  border-bottom: 2px solid #b9cbd0;
+  margin-bottom: 18px;
+}
+
+.tab {
+  background: #e9edf0;
+  border: 1px solid #b9cbd0;
+  border-bottom: none;
+  border-radius: 5px 5px 0 0;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #48616c;
+}
+
+.tab:hover {
+  background: #f7fafb;
+}
+
+.tab.active {
+  background: white;
+  color: #176b91;
+  position: relative;
+  top: 2px;
+}
+
+/* ==========================================
+   LISTE DES PLAGES
+   ========================================== */
+
+.beach-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.beach-card {
+  background: #ffffff;
+  border: 1px solid #d7dedb;
+  border-radius: 6px;
+  padding: 17px 18px;
+  box-shadow: 0 2px 5px rgba(41, 59, 67, 0.05);
+}
+
+.beach-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.beach-top h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #24576c;
+  font-weight: bold;
+}
+
+/* ==========================================
+   INDICATEURS DE DISPONIBILITÉ
+   ========================================== */
+
+.status {
+  display: inline-block;
+  padding: 7px 11px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.2px;
+  text-align: center;
+  border: 1px solid transparent;
+}
+
+.status-available {
+  background: #e0f1df;
+  color: #286c35;
+  border-color: #a8d4a5;
+}
+
+.status-full {
+  background: #f9e1dd;
+  color: #a23b32;
+  border-color: #e7b3aa;
+}
+
+.status-unknown {
+  background: #eeeeea;
+  color: #777b7a;
+  border-color: #d6d9d5;
+}
+
+/* ==========================================
+   HORODATAGE
+   ========================================== */
+
+.updated-at {
+  margin: 9px 0 0;
+  color: #849093;
+  font-size: 11px;
+}
+
+/* ==========================================
+   ALTERNATIVE BUS
+   ========================================== */
+
+.bus-info {
+  background: #eef6fa;
+  border-left: 3px solid #5b9eb9;
+  padding: 9px 11px;
+  margin: 12px 0 0;
+  color: #3b6576;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ==========================================
+   BOUTON DE SIGNALEMENT
+   ========================================== */
+
+.report-link {
+  display: inline-block;
+  margin-top: 14px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #176b91;
+  font-size: 12px;
+  text-decoration: underline;
+  font-weight: normal;
+}
+
+.report-link:hover {
+  color: #104f6c;
+}
+
+/* ==========================================
+   PANNEAU DE SIGNALEMENT
+   ========================================== */
+
+.report-panel {
+  margin-top: 15px;
+  padding: 14px;
+  background: #f8faf9;
+  border: 1px solid #d7e3e1;
+  border-radius: 5px;
+}
+
+.report-panel p {
+  margin: 0 0 12px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #425c66;
+}
+
+.report-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.report-available,
+.report-full {
+  border-radius: 4px;
+  padding: 11px 13px;
+  font-size: 12px;
+  font-weight: bold;
+  border: 1px solid;
+}
+
+.report-available {
+  background: #e0f1df;
+  color: #286c35;
+  border-color: #a8d4a5;
+}
+
+.report-full {
+  background: #f9e1dd;
+  color: #a23b32;
+  border-color: #e7b3aa;
+}
+
+.report-available:hover {
+  background: #cde9cb;
+}
+
+.report-full:hover {
+  background: #f4d0c9;
+}
+
+.cancel-button {
+  display: block;
+  margin-top: 12px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: #7c888c;
+  text-decoration: underline;
+  font-size: 12px;
+}
+
+/* ==========================================
+   MESSAGE DE CONFIRMATION
+   ========================================== */
+
+.success-message {
+  background: #e6f3e5;
+  border: 1px solid #a8d4a5;
+  color: #286c35;
+  padding: 12px 14px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  font-size: 13px;
+}
+
+/* ==========================================
+   CARTE (EN ATTENDANT LA VRAIE)
+   ========================================== */
+
+.map-placeholder {
+  background: white;
+  border: 1px solid #d7dedb;
+  border-radius: 6px;
+  padding: 25px 20px;
+  text-align: center;
+}
+
+.map-placeholder h3 {
+  margin-top: 0;
+  color: #24576c;
+}
+
+.map-placeholder p {
+  font-size: 13px;
+  color: #657278;
+}
+
+.map-placeholder button {
+  background: #e9edf0;
+  color: #24576c;
+  border: 1px solid #b9cbd0;
+  border-radius: 4px;
+  padding: 9px 14px;
+}
+
+/* ==========================================
+   AVERTISSEMENT
+   ========================================== */
+
+.notice {
+  margin-top: 25px;
+  padding: 14px 16px;
+  background: #fff9e6;
+  border: 1px solid #e7d69c;
+  border-radius: 5px;
+  font-size: 12px;
+  color: #726543;
+  line-height: 1.6;
+}
+
+.notice strong {
+  color: #66552b;
+}
+
+.notice p {
+  margin: 6px 0 0;
+}
+
+/* ==========================================
+   PIED DE PAGE
+   ========================================== */
+
+.site-footer {
+  background: #e8e9e2;
+  border-top: 1px solid #d4d8d3;
+  padding: 17px 16px;
+  text-align: center;
+  font-size: 11px;
+  color: #7a8584;
+}
+
+.site-footer p {
+  margin: 0;
+}
+
+/* ==========================================
+   ADAPTATION AUX TÉLÉPHONES
+   ========================================== */
+
+@media (max-width: 600px) {
+  .site-header {
+    padding: 17px 15px;
+  }
+
+  .site-header h1 {
+    font-size: 25px;
+  }
+
+  .main-content {
+    padding: 20px 12px 30px;
+  }
+
+  .beach-card {
+    padding: 15px 14px;
+  }
+
+  .beach-top h3 {
+    font-size: 17px;
+  }
+
+  .status {
+    font-size: 10px;
+    padding: 6px 8px;
+  }
+
+  .report-buttons {
+    flex-direction: column;
+  }
+
+  .report-available,
+  .report-full {
+    width: 100%;
+  }
+}
