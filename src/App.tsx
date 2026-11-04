@@ -1,3 +1,4 @@
+import { supabase } from './supabase'
 import { useEffect, useState } from 'react'
 import './App.css'
 
@@ -130,6 +131,47 @@ function App() {
   const [selectedBeach, setSelectedBeach] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'list' | 'map'>('list')
   const [message, setMessage] = useState('')
+  useEffect(() => {
+  async function loadReports() {
+    const { data, error } = await supabase
+      .from('parking_reports')
+      .select('beach_id, status, created_at')
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    if (error) {
+      console.error('Erreur Supabase :', error.message)
+      return
+    }
+
+    setBeaches((previous) =>
+      previous.map((beach) => {
+        const latestReport = data?.find(
+          (report) => report.beach_id === beach.id
+        )
+
+        if (!latestReport) {
+          return beach
+        }
+
+        if (
+          latestReport.status !== 'available' &&
+          latestReport.status !== 'full'
+        ) {
+          return beach
+        }
+
+        return {
+          ...beach,
+          status: latestReport.status,
+          updatedAt: latestReport.created_at,
+        }
+      })
+    )
+  }
+
+  loadReports()
+}, [])
 const [now, setNow] = useState(() => Date.now())
 
 useEffect(() => {
