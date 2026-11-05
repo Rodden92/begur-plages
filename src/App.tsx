@@ -45,7 +45,6 @@ const initialBeaches: Beach[] = [
   },
 ]
 
-const STORAGE_KEY = 'begur-plages-v01'
 const RECENT_MINUTES = 10
 const EXPIRED_MINUTES = 20
 const REFRESH_INTERVAL = 10_000
