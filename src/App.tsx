@@ -44,8 +44,8 @@ const initialBeaches: Beach[] = [
 ]
 
 const STORAGE_KEY = 'begur-plages-v01'
-const RECENT_MINUTES = 1
-const EXPIRED_MINUTES = 2
+const RECENT_MINUTES = 10
+const EXPIRED_MINUTES = 20
 
 function statusLabel(status: Status): string {
   switch (status) {
@@ -170,7 +170,13 @@ function App() {
     )
   }
 
-  loadReports()
+    loadReports()
+
+  const refreshTimer = window.setInterval(() => {
+    loadReports()
+  }, 10_000)
+
+  return () => window.clearInterval(refreshTimer)
 }, [])
 const [now, setNow] = useState(() => Date.now())
 
@@ -185,27 +191,50 @@ useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(beaches))
   }, [beaches])
 
-  function reportStatus(beachId: string, status: Status) {
-    setBeaches((previous) =>
-      previous.map((beach) =>
-        beach.id === beachId
-          ? {
-              ...beach,
-              status,
-              updatedAt: new Date().toISOString(),
-            }
-          : beach
-      )
+ async function reportStatus(
+  beachId: string,
+  status: 'available' | 'full'
+) {
+  setMessage('Enregistrement du signalement...')
+
+  const { error } = await supabase.functions.invoke(
+    'submit-parking-report',
+    {
+      body: {
+        beach_id: beachId,
+        status: status,
+      },
+    }
+  )
+
+  if (error) {
+    console.error('Erreur de signalement :', error)
+
+    setMessage(
+      'Impossible d’enregistrer le signalement. Réessayez dans quelques instants.'
     )
-
-    setSelectedBeach(null)
-    setMessage('Merci ! Votre signalement a été enregistré sur cet appareil.')
-
-    window.setTimeout(() => {
-      setMessage('')
-    }, 4000)
+    return
   }
 
+  setBeaches((previous) =>
+    previous.map((beach) =>
+      beach.id === beachId
+        ? {
+            ...beach,
+            status,
+            updatedAt: new Date().toISOString(),
+          }
+        : beach
+    )
+  )
+
+  setSelectedBeach(null)
+  setMessage('Merci ! Votre signalement a été partagé avec les autres visiteurs.')
+
+  window.setTimeout(() => {
+    setMessage('')
+  }, 4000)
+}
   return (
     <div className="app">
       <header className="site-header">
@@ -337,13 +366,13 @@ useEffect(() => {
         )}
 
         <aside className="notice">
-          <strong>ℹ️ Version de démonstration</strong>
-          <p>
-            Les états initiaux sont fictifs. Les signalements sont enregistrés
-            uniquement dans votre navigateur : ils ne sont pas encore partagés
-            avec les autres visiteurs.
-          </p>
-        </aside>
+  <strong>ℹ️ Informations participatives</strong>
+  <p>
+    Les informations sont partagées par les visiteurs et peuvent évoluer
+    rapidement. Elles sont données à titre indicatif : vérifiez toujours
+    la situation sur place avant de vous déplacer.
+  </p>
+</aside>
       </main>
 
       <footer className="site-footer">
