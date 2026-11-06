@@ -1,28 +1,44 @@
 /* ==========================================
-   BEGUR PLAGES — VERSION 0.2
-   Petit guide local, esprit Web 2005
+   BEGUR PLAGES
+   Costa Brava contemporaine — Version 0.8
    ========================================== */
 
-/* Couleurs et réglages généraux */
+/* COULEURS ET BASE */
 
 :root {
-  font-family: Verdana, Geneva, sans-serif;
-  color: #293b43;
-  background-color: #f6f3e9;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #29454a;
+  background: #f8f0df;
+
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+
+  --sand: #f8f0df;
+  --ivory: #fffdf7;
+  --petrol: #176b76;
+  --petrol-dark: #10535e;
+  --coral: #d97956;
+  --border: #e8d8bc;
+  --text: #29454a;
+  --muted: #718080;
+  --green: #287c52;
+  --red: #b94339;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   min-width: 320px;
-  display: block;
-  background: #f6f3e9;
+  background: var(--sand);
+  color: var(--text);
 }
 
 #root {
@@ -35,14 +51,22 @@ button {
   cursor: pointer;
 }
 
-a {
-  color: #176b91;
-  text-decoration: underline;
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
-/* ==========================================
-   STRUCTURE GÉNÉRALE
-   ========================================== */
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--coral);
+  outline-offset: 3px;
+}
+
+a {
+  color: var(--petrol);
+}
+
+/* STRUCTURE */
 
 .app {
   min-height: 100vh;
@@ -52,382 +76,483 @@ a {
 
 .main-content {
   width: 100%;
-  max-width: 780px;
+  max-width: 740px;
   margin: 0 auto;
-  padding: 24px 16px 40px;
+  padding: 28px 18px 44px;
   flex: 1;
 }
 
-/* ==========================================
-   BANDEAU SUPÉRIEUR
-   ========================================== */
+/* EN-TÊTE */
 
 .site-header {
-  background: #f2d77b;
-  border-bottom: 3px solid #d4ad43;
-  padding: 20px 16px;
+  background: var(--petrol);
+  border-bottom: 4px solid var(--coral);
+  padding: 27px 20px 25px;
 }
 
 .header-inner {
-  max-width: 780px;
+  max-width: 740px;
   margin: 0 auto;
 }
 
 .site-header h1 {
-  margin: 0 0 7px;
-  color: #24576c;
-  font-size: 29px;
-  font-weight: bold;
-  letter-spacing: -0.7px;
+  margin: 0 0 8px;
+  color: #fffdf7;
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 31px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  line-height: 1.2;
 }
 
 .site-header p {
   margin: 0;
-  color: #645b40;
+  color: #e0efed;
   font-size: 13px;
+  line-height: 1.6;
 }
 
-/* ==========================================
-   INTRODUCTION
-   ========================================== */
+/* INTRODUCTION */
 
 .intro {
-  margin-bottom: 20px;
+  margin-bottom: 23px;
 }
 
 .intro h2 {
-  margin: 0 0 9px;
-  font-size: 21px;
-  color: #24576c;
+  display: inline-block;
+  margin: 0 0 12px;
+  padding-bottom: 9px;
+
+  color: var(--petrol-dark);
+  border-bottom: 3px solid var(--coral);
+
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
 }
 
 .intro p {
   margin: 0;
+  max-width: 550px;
+  color: #687a7c;
   font-size: 13px;
-  line-height: 1.6;
-  color: #657278;
+  line-height: 1.7;
 }
 
-/* ==========================================
-   ONGLETS LISTE / CARTE
-   ========================================== */
+/* ONGLETS LISTE / CARTE */
 
 .tabs {
   display: flex;
-  gap: 5px;
-  border-bottom: 2px solid #b9cbd0;
-  margin-bottom: 18px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  margin-bottom: 20px;
 }
 
 .tab {
-  background: #e9edf0;
-  border: 1px solid #b9cbd0;
-  border-bottom: none;
-  border-radius: 5px 5px 0 0;
-  padding: 10px 18px;
-  font-size: 13px;
-  font-weight: bold;
-  color: #48616c;
+  flex: 0 0 auto;
+  padding: 8px 14px;
+
+  background: rgba(255, 255, 255, 0.45);
+  border: 1px solid #dfd3bf;
+  border-radius: 8px;
+
+  color: #667a7d;
+  font-size: 12px;
+  font-weight: 700;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
 }
 
 .tab:hover {
-  background: #f7fafb;
+  background: #fffaf0;
 }
 
 .tab.active {
-  background: white;
-  color: #176b91;
-  position: relative;
-  top: 2px;
+  background: var(--petrol);
+  border-color: var(--petrol);
+  color: white;
 }
 
-/* ==========================================
-   LISTE DES PLAGES
-   ========================================== */
+/* LISTE DES PLAGES */
 
 .beach-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 15px;
 }
 
 .beach-card {
-  background: #ffffff;
-  border: 1px solid #d7dedb;
-  border-radius: 6px;
-  padding: 17px 18px;
-  box-shadow: 0 2px 5px rgba(41, 59, 67, 0.05);
+  position: relative;
+  overflow: hidden;
+
+  background: var(--ivory);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+
+  padding: 21px 21px 20px;
+
+  box-shadow: 0 4px 14px rgba(91, 72, 44, 0.055);
+}
+
+/* Petite touche méditerranéenne */
+
+.beach-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--coral);
 }
 
 .beach-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
   flex-wrap: wrap;
+  gap: 12px;
 }
 
 .beach-top h3 {
   margin: 0;
-  font-size: 18px;
-  color: #24576c;
-  font-weight: bold;
+  color: var(--petrol-dark);
+
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  line-height: 1.3;
 }
 
-/* ==========================================
-   INDICATEURS DE DISPONIBILITÉ
-   ========================================== */
+/* STATUTS */
 
 .status {
-  display: inline-block;
-  padding: 7px 11px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: bold;
-  letter-spacing: 0.2px;
-  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 8px 11px;
   border: 1px solid transparent;
+  border-radius: 7px;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  line-height: 1.4;
+  text-align: center;
 }
 
 .status-available {
-  background: #e0f1df;
-  color: #286c35;
-  border-color: #a8d4a5;
+  background: #dff1e4;
+  color: #236c45;
+  border-color: #b9dfc4;
 }
 
 .status-full {
-  background: #f9e1dd;
-  color: #a23b32;
-  border-color: #e7b3aa;
+  background: #fbe3dd;
+  color: #a63830;
+  border-color: #edc2b9;
 }
 
 .status-unknown {
-  background: #eeeeea;
-  color: #777b7a;
-  border-color: #d6d9d5;
+  background: #f0ece3;
+  color: #74736d;
+  border-color: #ddd7cb;
 }
 
-/* ==========================================
-   HORODATAGE
-   ========================================== */
+/* DATE DES SIGNALEMENTS */
 
 .updated-at {
-  margin: 9px 0 0;
-  color: #849093;
-  font-size: 11px;
+  margin: 11px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
-/* ==========================================
-   ALTERNATIVE BUS
-   ========================================== */
+/* ALTERNATIVE BUS */
 
 .bus-info {
-  background: #eef6fa;
-  border-left: 3px solid #5b9eb9;
-  padding: 9px 11px;
-  margin: 12px 0 0;
-  color: #3b6576;
+  margin: 15px 0 0;
+  padding: 12px 14px;
+
+  background: #e7f2ef;
+  border-left: 3px solid var(--petrol);
+  border-radius: 0 8px 8px 0;
+
+  color: var(--petrol-dark);
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
-/* ==========================================
-   BOUTON DE SIGNALEMENT
-   ========================================== */
+/* BOUTON DE SIGNALEMENT */
 
 .report-link {
-  display: inline-block;
-  margin-top: 14px;
-  padding: 0;
-  background: none;
-  border: none;
-  color: #176b91;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 42px;
+  margin-top: 17px;
+  padding: 10px 15px;
+
+  background: #e6f1ee;
+  border: 1px solid #bfd8d4;
+  border-radius: 8px;
+
+  color: var(--petrol-dark);
   font-size: 12px;
-  text-decoration: underline;
-  font-weight: normal;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .report-link:hover {
-  color: #104f6c;
+  background: #d4e8e3;
+  border-color: var(--petrol);
 }
 
-/* ==========================================
-   PANNEAU DE SIGNALEMENT
-   ========================================== */
+/* PANNEAU DE SIGNALEMENT */
 
 .report-panel {
-  margin-top: 15px;
-  padding: 14px;
-  background: #f8faf9;
-  border: 1px solid #d7e3e1;
-  border-radius: 5px;
+  margin-top: 17px;
+  padding: 16px;
+
+  background: #f7f1e5;
+  border: 1px solid #e6d9c1;
+  border-radius: 10px;
 }
 
 .report-panel p {
-  margin: 0 0 12px;
+  margin: 0 0 13px;
+  color: var(--petrol-dark);
   font-size: 13px;
-  font-weight: bold;
-  color: #425c66;
+  font-weight: 700;
 }
 
 .report-buttons {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .report-available,
 .report-full {
-  border-radius: 4px;
-  padding: 11px 13px;
-  font-size: 12px;
-  font-weight: bold;
+  flex: 1;
+  min-height: 46px;
+  padding: 12px 14px;
+
   border: 1px solid;
+  border-radius: 8px;
+
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+
+  transition: background 0.2s ease;
 }
 
 .report-available {
-  background: #e0f1df;
-  color: #286c35;
-  border-color: #a8d4a5;
+  background: #dff1e4;
+  color: #236c45;
+  border-color: #acd5b9;
 }
 
 .report-full {
-  background: #f9e1dd;
-  color: #a23b32;
-  border-color: #e7b3aa;
+  background: #fbe3dd;
+  color: #a63830;
+  border-color: #e9b6ab;
 }
 
-.report-available:hover {
-  background: #cde9cb;
+.report-available:hover:not(:disabled) {
+  background: #cce9d5;
 }
 
-.report-full:hover {
-  background: #f4d0c9;
+.report-full:hover:not(:disabled) {
+  background: #f6d1c7;
 }
 
 .cancel-button {
   display: block;
-  margin-top: 12px;
-  padding: 0;
+  margin-top: 13px;
+  padding: 7px 0;
+
   background: none;
   border: none;
-  color: #7c888c;
-  text-decoration: underline;
+
+  color: #797d79;
   font-size: 12px;
+  text-decoration: underline;
 }
 
-/* ==========================================
-   MESSAGE DE CONFIRMATION
-   ========================================== */
+/* MESSAGES */
 
 .success-message {
-  background: #e6f3e5;
-  border: 1px solid #a8d4a5;
-  color: #286c35;
-  padding: 12px 14px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  font-size: 13px;
-}
-
-/* ==========================================
-   CARTE (EN ATTENDANT LA VRAIE)
-   ========================================== */
-
-.map-placeholder {
-  background: white;
-  border: 1px solid #d7dedb;
-  border-radius: 6px;
-  padding: 25px 20px;
-  text-align: center;
-}
-
-.map-placeholder h3 {
-  margin-top: 0;
-  color: #24576c;
-}
-
-.map-placeholder p {
-  font-size: 13px;
-  color: #657278;
-}
-
-.map-placeholder button {
-  background: #e9edf0;
-  color: #24576c;
-  border: 1px solid #b9cbd0;
-  border-radius: 4px;
-  padding: 9px 14px;
-}
-
-/* ==========================================
-   AVERTISSEMENT
-   ========================================== */
-
-.notice {
-  margin-top: 25px;
+  margin-bottom: 18px;
   padding: 14px 16px;
-  background: #fff9e6;
-  border: 1px solid #e7d69c;
-  border-radius: 5px;
-  font-size: 12px;
-  color: #726543;
+
+  background: #e2f1e5;
+  border: 1px solid #b3d8be;
+  border-radius: 9px;
+
+  color: #236c45;
+  font-size: 13px;
   line-height: 1.6;
 }
 
+/* CARTE TEMPORAIRE */
+
+.map-placeholder {
+  background: var(--ivory);
+  border: 1px solid var(--border);
+  border-radius: 13px;
+
+  padding: 30px 22px;
+  text-align: center;
+
+  box-shadow: 0 4px 14px rgba(91, 72, 44, 0.045);
+}
+
+.map-placeholder h3 {
+  margin: 0 0 12px;
+  color: var(--petrol-dark);
+  font-size: 21px;
+  font-weight: 800;
+}
+
+.map-placeholder p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.map-placeholder button {
+  margin-top: 18px;
+  padding: 11px 16px;
+
+  background: var(--petrol);
+  border: none;
+  border-radius: 8px;
+
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* INFORMATIONS PARTICIPATIVES */
+
+.notice {
+  margin-top: 29px;
+  padding: 17px 18px;
+
+  background: #f5e9cf;
+  border: 1px solid #e6d5b1;
+  border-radius: 10px;
+
+  color: #74664f;
+  font-size: 12px;
+  line-height: 1.7;
+}
+
 .notice strong {
-  color: #66552b;
+  color: #655439;
+  font-size: 13px;
 }
 
 .notice p {
-  margin: 6px 0 0;
+  margin: 7px 0 0;
 }
 
-/* ==========================================
-   PIED DE PAGE
-   ========================================== */
+/* PIED DE PAGE */
 
 .site-footer {
-  background: #e8e9e2;
-  border-top: 1px solid #d4d8d3;
-  padding: 17px 16px;
+  padding: 20px 16px;
+
+  background: var(--petrol-dark);
+  border-top: 3px solid var(--coral);
+
+  color: #d9e9e5;
   text-align: center;
   font-size: 11px;
-  color: #7a8584;
+  line-height: 1.6;
 }
 
 .site-footer p {
   margin: 0;
 }
 
-/* ==========================================
-   ADAPTATION AUX TÉLÉPHONES
-   ========================================== */
+/* VERSION SMARTPHONE */
 
 @media (max-width: 600px) {
   .site-header {
-    padding: 17px 15px;
+    padding: 23px 17px;
   }
 
   .site-header h1 {
-    font-size: 25px;
+    font-size: 28px;
+  }
+
+  .site-header p {
+    font-size: 12px;
   }
 
   .main-content {
-    padding: 20px 12px 30px;
+    padding: 25px 13px 37px;
+  }
+
+  .intro {
+    margin-bottom: 20px;
+  }
+
+  .intro h2 {
+    font-size: 21px;
+  }
+
+  .intro p {
+    font-size: 12px;
+  }
+
+  .tabs {
+    margin-bottom: 17px;
+  }
+
+  .tab {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .beach-list {
+    gap: 12px;
   }
 
   .beach-card {
-    padding: 15px 14px;
+    padding: 19px 16px 18px;
+  }
+
+  .beach-top {
+    align-items: flex-start;
   }
 
   .beach-top h3 {
-    font-size: 17px;
+    font-size: 19px;
   }
 
   .status {
+    padding: 7px 9px;
     font-size: 10px;
-    padding: 6px 8px;
+  }
+
+  .report-link {
+    min-height: 44px;
   }
 
   .report-buttons {
@@ -437,5 +562,31 @@ a {
   .report-available,
   .report-full {
     width: 100%;
+    min-height: 46px;
+  }
+
+  .notice {
+    padding: 15px;
+  }
+}
+
+/* TRÈS PETITS ÉCRANS */
+
+@media (max-width: 360px) {
+  .site-header h1 {
+    font-size: 26px;
+  }
+
+  .beach-top {
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .beach-top h3 {
+    font-size: 18px;
+  }
+
+  .tab {
+    padding: 7px 11px;
   }
 }
