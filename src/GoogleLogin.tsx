@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from './supabase'
+import ReferralInvite from './ReferralInvite'
 
 type ProfilePoints = {
   points_balance: number
@@ -274,6 +275,9 @@ export default function GoogleLogin() {
           )}
         </div>
 
+        {/* INVITATIONS ET PARRAINAGE */}
+        <ReferralInvite userId={session.user.id} />
+        
         {/* ACTUALISATION DES POINTS */}
         <button
           type="button"
