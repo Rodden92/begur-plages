@@ -78,7 +78,6 @@ const initialBeaches: Beach[] = beachLocations.map(
 )
 
 const RECENT_MINUTES = 10
-const EXPIRED_MINUTES = 20
 const REFRESH_INTERVAL = 10_000
 
 function statusLabel(status: Status): string {
@@ -105,24 +104,19 @@ function getFreshness(
   const ageMinutes = (now - timestamp) / 60_000
 
   if (ageMinutes < RECENT_MINUTES) return 'recent'
-  if (ageMinutes < EXPIRED_MINUTES) return 'old'
-
-  return 'expired'
+  return 'old'
 }
 
 function getDisplayStatus(
   beach: Beach,
   now: number
 ): Status {
-  if (getFreshness(beach.updatedAt, now) === 'expired') {
-    return 'unknown'
-  }
-
+  void now
   return beach.status
 }
 
 function formatTime(date: string | null): string {
-  if (!date) return 'Aucun signalement récent'
+  if (!date) return 'Aucun signalement enregistré'
 
   return `Signalé le ${new Date(date).toLocaleString(
     'fr-FR',
@@ -647,7 +641,7 @@ function unlockGuestBeach(beachId: string) {
 
       <main className="main-content">
         <div className="intro">
-          <h2>État des parkings</h2>
+          <h2>État des parkings des plages</h2>
 
           <p>
             Consultez les informations disponibles
@@ -665,61 +659,23 @@ function unlockGuestBeach(beachId: string) {
   <EmailLogin />
 </div>
 
-        {/* SOLDE ET INFORMATIONS DE DÉBLOCAGE */}
-        <div
-          style={{
-            padding: '16px',
-            marginBottom: '24px',
-            borderRadius: '12px',
-            backgroundColor: '#eef5f2',
-            border: '1px solid #d3e5db',
-          }}
-        >
-          <h3 style={{ marginTop: 0 }}>
-            🔓 Déblocage des plages
-          </h3>
-
-          {loadingAccount ? (
-            <p>Chargement de votre compte…</p>
-          ) : userId ? (
-            <>
-              <p>
-                <strong>Votre solde :</strong>{' '}
-                {pointsBalance === null
-                  ? 'Indisponible'
-                  : `${pointsBalance} points`}
-              </p>
-
-              <p>
-                Débloquez une plage pendant{' '}
-                <strong>7 jours pour 10 points</strong>.
-              </p>
-
-              <p style={{ fontSize: '13px' }}>
-                Le déblocage est enregistré dans votre
-                compte Supabase.
-              </p>
-
-              <button
-                type="button"
-                onClick={() => {
-                  void refreshUnlocks(userId)
-                }}
-                style={{
-                  padding: '8px 12px',
-                  cursor: 'pointer',
-                }}
-              >
-                🔄 Actualiser mon solde
-              </button>
-            </>
-          ) : (
-            <p>
-              Connectez-vous avec Google pour utiliser
-              vos points et débloquer des plages.
-            </p>
-          )}
-        </div>
+        {/* Solde discret, sans pavé de déblocage. */}
+        {!loadingAccount && userId && (
+          <div className="account-balance">
+            <span>
+              <strong>Votre solde :</strong>{' '}
+              {pointsBalance === null
+                ? 'Indisponible'
+                : `${pointsBalance} points`}
+            </span>
+            <button
+              type="button"
+              onClick={() => void refreshUnlocks(userId)}
+            >
+              🔄 Actualiser
+            </button>
+          </div>
+        )}
 
         <nav className="tabs" aria-label="Affichage">
           <button
@@ -857,7 +813,7 @@ const guestFreeOfferUsed = (() => {
 >
   {effectiveUnlock
     ? statusLabel(displayStatus)
-    : '🔒 STATUT RÉSERVÉ'}
+    : '🔒 STATUT CACHÉ'}
 </span>
                         </div>
 
@@ -931,7 +887,8 @@ const guestFreeOfferUsed = (() => {
     : '🎁 Première plage offerte — 7 jours'}
                               </button>
 
-                              {pointsBalance !== null &&
+                              {freeBeachUnlockUsed &&
+                                pointsBalance !== null &&
                                 pointsBalance < 10 && (
                                   <p
                                     style={{
@@ -950,9 +907,7 @@ const guestFreeOfferUsed = (() => {
                               {guestFreeOfferUsed ? (
                                 <p>
                                   🔒 Cette plage est réservée aux membres.
-                                  Inscrivez-vous gratuitement pour recevoir
-                                  30 points de bienvenue et débloquer
-                                  d'autres plages.
+                                  Inscrivez-vous gratuitement.
                                 </p>
                               ) : (
                                 <>
@@ -998,16 +953,8 @@ const guestFreeOfferUsed = (() => {
                               </p>
                             )}
 
-                            {freshness === 'expired' &&
-                              beach.updatedAt && (
-                                <p className="updated-at">
-                                  ⏳ Dernier signalement
-                                  trop ancien pour être
-                                  fiable.
-                                </p>
-                              )}
-
-                            {displayStatus === 'full' &&
+                            {effectiveUnlock &&
+                              displayStatus === 'full' &&
                               beach.bus && (
                                 <p className="bus-info">
                                   🚌 Alternative :{' '}
@@ -1015,7 +962,7 @@ const guestFreeOfferUsed = (() => {
                                 </p>
                               )}
 
-                            {selectedBeach === beach.id ? (
+                            {effectiveUnlock && (selectedBeach === beach.id ? (
                               <div className="report-panel">
                                 <p>
                                   Que constatez-vous
@@ -1078,7 +1025,7 @@ const guestFreeOfferUsed = (() => {
                                 Signaler l'état
                                 de ce parking
                               </button>
-                            )}
+                            ))}
                           </>
                         ) : (
                           <div

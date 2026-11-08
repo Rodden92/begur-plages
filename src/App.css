@@ -590,3 +590,22 @@ a {
     padding: 7px 11px;
   }
 }
+/* Solde discret : le pavé « Déblocage des plages » est supprimé. */
+.account-balance {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 18px;
+  color: var(--petrol-dark);
+  font-size: 13px;
+}
+
+.account-balance button {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--ivory);
+  color: var(--petrol-dark);
+  font-size: 12px;
+}
