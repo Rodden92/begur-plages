@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { supabase } from './supabase'
 import BeachMap from './BeachMap'
 import GoogleLogin from './GoogleLogin'
@@ -147,8 +147,12 @@ function App() {
     useState<string | null>(null)
 
   const [activeTab, setActiveTab] =
-    useState<'list' | 'map'>('list')
+    useState<'mine' | 'list' | 'map'>('list')
 
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [emailLoginOpen, setEmailLoginOpen] = useState(false)
+  const [accountReady, setAccountReady] = useState(false)
+  const initialTabChosen = useRef(false)
   const [message, setMessage] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [now, setNow] = useState(() => Date.now())
@@ -266,6 +270,7 @@ function App() {
 
       if (!nextUserId) {
         setLoadingAccount(false)
+        setAccountReady(true)
         return
       }
 
@@ -308,6 +313,7 @@ function App() {
       }
 
       setLoadingAccount(false)
+      setAccountReady(true)
     }
 
     // Détecter la connexion existante.
@@ -431,6 +437,7 @@ function unlockGuestBeach(beachId: string) {
 
   setNow(Date.now())
 
+  setActiveTab('mine')
   setMessage(
     '🎁 Plage débloquée gratuitement pendant 24 heures !'
   )
@@ -514,6 +521,7 @@ function unlockGuestBeach(beachId: string) {
     }
 
     setNow(Date.now())
+    setActiveTab('mine')
 
     if (isFreeUnlock) {
       setMessage(
@@ -617,8 +625,58 @@ function unlockGuestBeach(beachId: string) {
   // 7. Regrouper les plages par secteur
   // --------------------------------------------------
 
-  const sectors = Array.from(
-    new Set(beaches.map((beach) => beach.sector))
+  // Accès actifs : compte Supabase ou découverte gratuite du visiteur.
+  const guestAccess = (() => {
+    if (userId) return null
+    try {
+      const raw = localStorage.getItem('begur_guest_unlock')
+      if (!raw) return null
+      const parsed: unknown = JSON.parse(raw)
+      if (!parsed || typeof parsed !== 'object') return null
+      const value = parsed as { beachId?: unknown; expiresAt?: unknown }
+      if (typeof value.beachId !== 'string' || typeof value.expiresAt !== 'number') return null
+      return value
+    } catch {
+      return null
+    }
+  })()
+
+  function hasAccess(beachId: string): boolean {
+    if (userId) {
+      return unlocks.some(
+        (unlock) => unlock.beach_id === beachId &&
+          new Date(unlock.expires_at).getTime() > now
+      )
+    }
+    return guestAccess?.beachId === beachId && guestAccess.expiresAt! > now
+  }
+
+  const unlockedCount = beaches.filter((beach) => hasAccess(beach.id)).length
+
+  // Choisir l'onglet de départ une seule fois, sans interrompre la navigation.
+  useEffect(() => {
+    if (!accountReady || initialTabChosen.current) return
+    initialTabChosen.current = true
+    if (unlockedCount > 0) setActiveTab('mine')
+  }, [accountReady, unlockedCount])
+
+  // Fermer la fenêtre par la touche Échap.
+  useEffect(() => {
+    if (!authModalOpen) return
+    function onEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setAuthModalOpen(false)
+    }
+    window.addEventListener('keydown', onEscape)
+    return () => window.removeEventListener('keydown', onEscape)
+  }, [authModalOpen])
+
+  const visibleBeaches = activeTab === 'mine'
+    ? beaches.filter((beach) => hasAccess(beach.id))
+    : [...beaches].sort((a, b) => Number(hasAccess(b.id)) - Number(hasAccess(a.id)))
+
+  const visibleSectors = Array.from(new Set(visibleBeaches.map((beach) => beach.sector))).sort(
+    (a, b) => Number(visibleBeaches.some((beach) => beach.sector === b && hasAccess(beach.id))) -
+      Number(visibleBeaches.some((beach) => beach.sector === a && hasAccess(beach.id)))
   )
 
   // --------------------------------------------------
@@ -631,7 +689,12 @@ function unlockGuestBeach(beachId: string) {
 
       <header className="site-header">
         <div className="header-inner">
-          <h1>🏖️ Begur Plages</h1>
+          <div className="header-title-row">
+            <h1>🏖️ Begur Plages</h1>
+            <button type="button" className="header-login" onClick={() => setAuthModalOpen(true)}>
+              {userId ? '👤 Mon compte' : 'Connexion'}
+            </button>
+          </div>
           <p>
             Les parkings des plages de Begur, Tamariu,
             Llafranc et Calella, en un coup d'œil.
@@ -648,16 +711,6 @@ function unlockGuestBeach(beachId: string) {
             et partagez ce que vous observez sur place.
           </p>
         </div>
-
-        {/* CONNEXION GOOGLE ET E-MAIL */}
-<div
-  style={{
-    marginBottom: '24px',
-  }}
->
-  <GoogleLogin />
-  <EmailLogin />
-</div>
 
         {/* Solde discret, sans pavé de déblocage. */}
         {!loadingAccount && userId && (
@@ -678,6 +731,10 @@ function unlockGuestBeach(beachId: string) {
         )}
 
         <nav className="tabs" aria-label="Affichage">
+          <button type="button" className={activeTab === 'mine' ? 'tab active' : 'tab'}
+            onClick={() => setActiveTab('mine')}>
+            ⭐ Mes plages{unlockedCount > 0 ? ` (${unlockedCount})` : ''}
+          </button>
           <button
             type="button"
             className={
@@ -712,10 +769,19 @@ function unlockGuestBeach(beachId: string) {
           </div>
         )}
 
-        {activeTab === 'list' ? (
+        {activeTab !== 'map' ? (
           <div className="beach-list">
-            {sectors.map((sector) => {
-              const sectorBeaches = beaches.filter(
+            {activeTab === 'mine' && visibleBeaches.length === 0 && (
+              <div className="empty-beaches">
+                <h3>⭐ Aucune plage débloquée pour le moment</h3>
+                <p>Découvrez une plage gratuitement depuis la liste générale.</p>
+                <button type="button" className="report-link" onClick={() => setActiveTab('list')}>
+                  ☰ Voir toutes les plages
+                </button>
+              </div>
+            )}
+            {visibleSectors.map((sector) => {
+              const sectorBeaches = visibleBeaches.filter(
                 (beach) => beach.sector === sector
               )
 
@@ -1105,6 +1171,55 @@ const guestFreeOfferUsed = (() => {
           </p>
         </aside>
       </main>
+
+      {authModalOpen && (
+        <div className="auth-backdrop" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setAuthModalOpen(false)
+        }}>
+          <section className="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+            <div className="auth-dialog-heading">
+              <span className="auth-brand">BEGUR PLAGES</span>
+              <button type="button" className="auth-close" aria-label="Fermer" onClick={() => setAuthModalOpen(false)}>×</button>
+            </div>
+            <h2 id="auth-title" className="auth-title">
+              {userId ? 'Mon compte' : 'Bienvenue sur Begur Plages'}
+            </h2>
+            {userId ? (
+              <div className="auth-account"><GoogleLogin /></div>
+            ) : (
+              <>
+                <p className="auth-intro">Connectez-vous pour profiter pleinement des plages de la Costa Brava.</p>
+                <div className="auth-methods">
+                  {!emailLoginOpen ? (
+                    <>
+                      <div className="auth-google"><GoogleLogin /></div>
+                      <button type="button" className="auth-email-choice" onClick={() => setEmailLoginOpen(true)}>
+                        <span className="auth-method-icon" aria-hidden="true">✉</span>
+                        Continuer avec E-mail
+                      </button>
+                      <div className="auth-divider"><span>Autres options</span></div>
+                      <button type="button" className="auth-unavailable" disabled>
+                        <span><span className="auth-method-icon" aria-hidden="true">●</span> Continuer avec Apple</span>
+                        <small>Bientôt disponible</small>
+                      </button>
+                      <button type="button" className="auth-unavailable" disabled>
+                        <span><span className="auth-method-icon" aria-hidden="true">▯</span> Continuer avec un téléphone</span>
+                        <small>Bientôt disponible</small>
+                      </button>
+                    </>
+                  ) : (
+                    <div className="auth-email-step">
+                      <button type="button" className="auth-back" onClick={() => setEmailLoginOpen(false)}>← Retour aux options</button>
+                      <EmailLogin />
+                    </div>
+                  )}
+                </div>
+                <p className="auth-footer-note">Connexion sécurisée · Aucun mot de passe nécessaire pour l’e-mail</p>
+              </>
+            )}
+          </section>
+        </div>
+      )}
 
       <footer className="site-footer">
         <p>
