@@ -635,7 +635,7 @@ function unlockGuestBeach(beachId: string) {
       if (!parsed || typeof parsed !== 'object') return null
       const value = parsed as { beachId?: unknown; expiresAt?: unknown }
       if (typeof value.beachId !== 'string' || typeof value.expiresAt !== 'number') return null
-      return value
+      return { beachId: value.beachId, expiresAt: value.expiresAt }
     } catch {
       return null
     }
