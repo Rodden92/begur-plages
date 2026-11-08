@@ -1,3 +1,4 @@
+import { LanguageProvider, useLanguage } from './i18n'
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from './supabase'
 import BeachMap from './BeachMap'
@@ -90,10 +91,10 @@ function commonsPageUrl(file: string): string {
 }
 
 const BUS_INFO: Record<string, string> = {
-  'sa-riera': 'Bus Platges – ligne Sa Riera',
-  'sa-tuna': 'Bus Platges – ligne Sa Tuna',
-  aiguablava: 'Bus Platges – ligne Fornells / Aiguablava',
-  fornells: 'Bus Platges – ligne Fornells / Aiguablava',
+  'sa-riera': "Bus Platges – ligne Sa Riera",
+  'sa-tuna': "Bus Platges – ligne Sa Tuna",
+  aiguablava: "Bus Platges – ligne Fornells / Aiguablava",
+  fornells: "Bus Platges – ligne Fornells / Aiguablava",
 }
 
 const initialBeaches: Beach[] = beachLocations.map(
@@ -111,14 +112,14 @@ const initialBeaches: Beach[] = beachLocations.map(
 const RECENT_MINUTES = 10
 const REFRESH_INTERVAL = 10_000
 
-function statusLabel(status: Status): string {
+function statusLabel(status: Status, t: (key: string) => string): string {
   switch (status) {
     case 'available':
-      return 'PLACES DISPONIBLES'
+      return t("PLACES DISPONIBLES")
     case 'full':
-      return 'PARKING COMPLET'
+      return t("PARKING COMPLET")
     default:
-      return 'INFORMATION INCONNUE'
+      return t("INFORMATION INCONNUE")
   }
 }
 
@@ -146,11 +147,11 @@ function getDisplayStatus(
   return beach.status
 }
 
-function formatTime(date: string | null): string {
-  if (!date) return 'Aucun signalement enregistré'
+function formatTime(date: string | null, t: (key: string) => string, locale: string): string {
+  if (!date) return t("Aucun signalement enregistré")
 
-  return `Signalé le ${new Date(date).toLocaleString(
-    'fr-FR',
+  return `${t('Signalé le')} ${new Date(date).toLocaleString(
+    locale,
     {
       day: '2-digit',
       month: '2-digit',
@@ -160,8 +161,8 @@ function formatTime(date: string | null): string {
   )}`
 }
 
-function formatExpiration(date: string): string {
-  return new Date(date).toLocaleString('fr-FR', {
+function formatExpiration(date: string, locale: string): string {
+  return new Date(date).toLocaleString(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -171,6 +172,7 @@ function formatExpiration(date: string): string {
 }
 
 function App() {
+  const { t, language, setLanguage, locale } = useLanguage()
   const [beaches, setBeaches] =
     useState<Beach[]>(initialBeaches)
 
@@ -438,19 +440,19 @@ function unlockGuestBeach(beachId: string) {
       ) {
         if (saved.expiresAt > Date.now()) {
           setMessage(
-            'Vous avez déjà une plage gratuite en cours.'
+            t("Vous avez déjà une plage gratuite en cours.")
           )
           return
         }
 
         setMessage(
-          'Votre découverte gratuite est terminée. Inscrivez-vous pour continuer.'
+          t("Votre découverte gratuite est terminée. Inscrivez-vous pour continuer.")
         )
         return
       }
     } catch {
       setMessage(
-        'Impossible de vérifier votre accès gratuit.'
+        t("Impossible de vérifier votre accès gratuit.")
       )
       return
     }
@@ -470,7 +472,7 @@ function unlockGuestBeach(beachId: string) {
 
   setActiveTab('mine')
   setMessage(
-    '🎁 Plage débloquée gratuitement pendant 24 heures !'
+    t("🎁 Plage débloquée gratuitement pendant 24 heures !")
   )
 }
 
@@ -484,12 +486,12 @@ function unlockGuestBeach(beachId: string) {
   )
 
   if (existingUnlock) {
-    setMessage('Cette plage est déjà débloquée.')
+    setMessage(t("Cette plage est déjà débloquée."))
     return
   }
 
   if (pointsBalance === null) {
-    setMessage('Solde indisponible. Veuillez réessayer.')
+    setMessage(t("Solde indisponible. Veuillez réessayer."))
     return
   }
 
@@ -497,7 +499,7 @@ function unlockGuestBeach(beachId: string) {
 
   if (!isFreeUnlock && pointsBalance < 10) {
     setMessage(
-      'Vous devez avoir au moins 10 points pour débloquer cette plage.'
+      t("Vous devez avoir au moins 10 points pour débloquer cette plage.")
     )
     return
   }
@@ -505,14 +507,14 @@ function unlockGuestBeach(beachId: string) {
   // Demander confirmation uniquement pour les déblocages payants.
   if (!isFreeUnlock) {
     const confirmed = window.confirm(
-      'Débloquer cette plage pendant 7 jours pour 10 points ?'
+      t("Débloquer cette plage pendant 7 jours pour 10 points ?")
     )
 
     if (!confirmed) return
   }
 
   setUnlockingBeachId(beachId)
-  setMessage('Déblocage en cours…')
+  setMessage(t("Déblocage en cours…"))
 
   try {
     // Supabase décide si le déblocage est gratuit ou payant.
@@ -522,7 +524,7 @@ function unlockGuestBeach(beachId: string) {
 
     if (error) {
       console.error('Erreur de déblocage :', error.message)
-      setMessage(`Déblocage impossible : ${error.message}`)
+      setMessage(`${t('Déblocage impossible :')} ${error.message}`)
       return
     }
 
@@ -556,18 +558,18 @@ function unlockGuestBeach(beachId: string) {
 
     if (isFreeUnlock) {
       setMessage(
-        '🎁 Votre première plage est offerte pendant 7 jours ! Aucun point utilisé.'
+        t("🎁 Votre première plage est offerte pendant 7 jours ! Aucun point utilisé.")
       )
     } else {
       setMessage(
-        '🎉 Plage débloquée pendant 7 jours ! 10 points ont été utilisés.'
+        t("🎉 Plage débloquée pendant 7 jours ! 10 points ont été utilisés.")
       )
     }
   } catch (error) {
     console.error('Erreur inattendue :', error)
 
     setMessage(
-      'Une erreur est survenue pendant le déblocage.'
+      t("Une erreur est survenue pendant le déblocage.")
     )
   } finally {
     setUnlockingBeachId(null)
@@ -585,13 +587,13 @@ function unlockGuestBeach(beachId: string) {
 
     if (!REPORTABLE_BEACH_IDS.includes(beachId)) {
       setMessage(
-        'Les signalements ne sont pas encore disponibles pour cette plage.'
+        t("Les signalements ne sont pas encore disponibles pour cette plage.")
       )
       return
     }
 
     setIsSubmitting(true)
-    setMessage('Enregistrement du signalement...')
+    setMessage(t("Enregistrement du signalement..."))
 
     try {
       const { error } = await supabase.functions.invoke(
@@ -608,7 +610,7 @@ function unlockGuestBeach(beachId: string) {
         console.error('Erreur de signalement :', error)
 
         setMessage(
-          'Impossible d’enregistrer le signalement. Réessayez dans quelques instants.'
+          t("Impossible d’enregistrer le signalement. Réessayez dans quelques instants.")
         )
 
         return
@@ -635,7 +637,7 @@ function unlockGuestBeach(beachId: string) {
       setSelectedBeach(null)
 
       setMessage(
-        'Merci ! Votre signalement a été partagé avec les autres visiteurs.'
+        t("Merci ! Votre signalement a été partagé avec les autres visiteurs.")
       )
 
       window.setTimeout(() => {
@@ -645,7 +647,7 @@ function unlockGuestBeach(beachId: string) {
       console.error('Erreur inattendue :', error)
 
       setMessage(
-        'Une erreur est survenue. Veuillez réessayer.'
+        t("Une erreur est survenue. Veuillez réessayer.")
       )
     } finally {
       setIsSubmitting(false)
@@ -679,7 +681,7 @@ function unlockGuestBeach(beachId: string) {
           new Date(unlock.expires_at).getTime() > now
       )
     }
-    return guestAccess?.beachId === beachId && guestAccess.expiresAt! > now
+    return guestAccess !== null && guestAccess.beachId === beachId && guestAccess.expiresAt > now
   }
 
   const unlockedCount = beaches.filter((beach) => hasAccess(beach.id)).length
@@ -722,24 +724,22 @@ function unlockGuestBeach(beachId: string) {
         <div className="header-inner">
           <div className="header-title-row">
             <h1>🏖️ Begur Plages</h1>
-            <button type="button" className="header-login" onClick={() => setAuthModalOpen(true)}>
-              {userId ? '👤 Mon compte' : 'Connexion'}
-            </button>
+            <div className="header-actions"><label className="language-picker"><span aria-hidden="true">🌐</span><select aria-label="Language / Idioma / Llengua" value={language} onChange={(event) => setLanguage(event.target.value as 'fr' | 'en' | 'es' | 'ca')}><option value="fr">FR</option><option value="en">EN</option><option value="es">ES</option><option value="ca">CA</option></select></label><button type="button" className="header-login" onClick={() => setAuthModalOpen(true)}>
+              {userId ? t("👤 Mon compte") : t('Connexion')}
+            </button></div>
           </div>
           <p>
-            Les parkings des plages de Begur, Tamariu,
-            Llafranc et Calella, en un coup d'œil.
+            {t("Les parkings des plages de Begur, Tamariu, Llafranc et Calella, en un coup d'œil.")}
           </p>
         </div>
       </header>
 
       <main className="main-content">
         <div className="intro">
-          <h2>État des parkings des plages</h2>
+          <h2>{t("État des parkings des plages")}</h2>
 
           <p>
-            Consultez les informations disponibles
-            et partagez ce que vous observez sur place.
+            {t("Consultez les informations disponibles et partagez ce que vous observez sur place.")}
           </p>
         </div>
 
@@ -747,16 +747,16 @@ function unlockGuestBeach(beachId: string) {
         {!loadingAccount && userId && (
           <div className="account-balance">
             <span>
-              <strong>Votre solde :</strong>{' '}
+              <strong>{t("Votre solde :")}</strong>{' '}
               {pointsBalance === null
-                ? 'Indisponible'
+                ? t('Indisponible')
                 : `${pointsBalance} points`}
             </span>
             <button
               type="button"
               onClick={() => void refreshUnlocks(userId)}
             >
-              🔄 Actualiser
+              {t("🔄 Actualiser")}
             </button>
           </div>
         )}
@@ -764,7 +764,7 @@ function unlockGuestBeach(beachId: string) {
         <nav className="tabs" aria-label="Affichage">
           <button type="button" className={activeTab === 'mine' ? 'tab active' : 'tab'}
             onClick={() => setActiveTab('mine')}>
-            ⭐ Mes plages{unlockedCount > 0 ? ` (${unlockedCount})` : ''}
+            {t('⭐ Mes plages')}{unlockedCount > 0 ? ` (${unlockedCount})` : ''}
           </button>
           <button
             type="button"
@@ -775,7 +775,7 @@ function unlockGuestBeach(beachId: string) {
             }
             onClick={() => setActiveTab('list')}
           >
-            ☰ Liste
+            {t("☰ Liste")}
           </button>
 
           <button
@@ -787,7 +787,7 @@ function unlockGuestBeach(beachId: string) {
             }
             onClick={() => setActiveTab('map')}
           >
-            🗺️ Carte
+            {t("🗺️ Carte")}
           </button>
         </nav>
 
@@ -804,10 +804,10 @@ function unlockGuestBeach(beachId: string) {
           <div className="beach-list">
             {activeTab === 'mine' && visibleBeaches.length === 0 && (
               <div className="empty-beaches">
-                <h3>⭐ Aucune plage débloquée pour le moment</h3>
-                <p>Découvrez une plage gratuitement depuis la liste générale.</p>
+                <h3>{t("⭐ Aucune plage débloquée pour le moment")}</h3>
+                <p>{t("Découvrez une plage gratuitement depuis la liste générale.")}</p>
                 <button type="button" className="report-link" onClick={() => setActiveTab('list')}>
-                  ☰ Voir toutes les plages
+                  {t("☰ Voir toutes les plages")}
                 </button>
               </div>
             )}
@@ -908,7 +908,7 @@ const guestFreeOfferUsed = (() => {
                             />
                             <figcaption>
                               <a href={commonsPageUrl(BEACH_PHOTOS[beach.id].file)} target="_blank" rel="noopener noreferrer">
-                                Photo : Wikimedia Commons · auteur et licence
+                                {t("Photo : Wikimedia Commons · auteur et licence")}
                               </a>
                             </figcaption>
                           </figure>
@@ -921,8 +921,8 @@ const guestFreeOfferUsed = (() => {
   }`}
 >
   {effectiveUnlock
-    ? statusLabel(displayStatus)
-    : '🔒 STATUT CACHÉ'}
+    ? statusLabel(displayStatus, t)
+    : t("🔒 STATUT CACHÉ")}
 </span>
                         </div>
 
@@ -942,7 +942,7 @@ const guestFreeOfferUsed = (() => {
                           {effectiveUnlock ? (
                             <>
                               <strong>
-                                ✅ Plage débloquée
+                                {t("✅ Plage débloquée")}
                               </strong>
 
                               <p
@@ -950,9 +950,9 @@ const guestFreeOfferUsed = (() => {
                                   marginBottom: 0,
                                 }}
                               >
-                                Accessible jusqu'au{' '}
+                                {t("Accessible jusqu'au")}{' '}
                                 {formatExpiration(
-                                  effectiveUnlock.expires_at
+                                  effectiveUnlock.expires_at, locale
                                 )}
                               </p>
                             </>
@@ -963,7 +963,7 @@ const guestFreeOfferUsed = (() => {
                                   marginTop: 0,
                                 }}
                               >
-                                🔒 Plage non débloquée
+                                {t("🔒 Plage non débloquée")}
                               </p>
 
                               <button
@@ -990,10 +990,10 @@ const guestFreeOfferUsed = (() => {
                                 }}
                               >
                                 {isUnlocking
-  ? '⏳ Déblocage…'
+  ? t("⏳ Déblocage…")
   : freeBeachUnlockUsed
-    ? '🔓 Débloquer — 10 points / 7 jours'
-    : '🎁 Première plage offerte — 7 jours'}
+    ? t("🔓 Débloquer — 10 points / 7 jours")
+    : t("🎁 Première plage offerte — 7 jours")}
                               </button>
 
                               {freeBeachUnlockUsed &&
@@ -1005,9 +1005,9 @@ const guestFreeOfferUsed = (() => {
                                       fontSize: '13px',
                                     }}
                                   >
-                                    Il vous manque{' '}
+                                    {t('Il vous manque')}{' '}
                                     {10 - pointsBalance}{' '}
-                                    point(s).
+                                    {t('point(s).')}
                                   </p>
                                 )}
                                         </>
@@ -1015,14 +1015,12 @@ const guestFreeOfferUsed = (() => {
                             <div>
                               {guestFreeOfferUsed ? (
                                 <p>
-                                  🔒 Cette plage est réservée aux membres.
-                                  Inscrivez-vous gratuitement.
+                                  {t("🔒 Cette plage est réservée aux membres. Inscrivez-vous gratuitement.")}
                                 </p>
                               ) : (
                                 <>
                                   <p>
-                                    🎁 Découvrez gratuitement une plage
-                                    pendant 24 heures.
+                                    {t("🎁 Découvrez gratuitement une plage pendant 24 heures.")}
                                   </p>
 
                                   <button
@@ -1039,7 +1037,7 @@ const guestFreeOfferUsed = (() => {
                                       cursor: 'pointer',
                                     }}
                                   >
-                                    🎁 Débloquer gratuitement — 24 h
+                                    {t("🎁 Débloquer gratuitement — 24 h")}
                                   </button>
                                 </>
                               )}
@@ -1051,14 +1049,13 @@ const guestFreeOfferUsed = (() => {
                           <>
                             <p className="updated-at">
                               {formatTime(
-                                beach.updatedAt
+                                beach.updatedAt, t, locale
                               )}
                             </p>
 
                             {freshness === 'old' && (
                               <p className="updated-at">
-                                ⚠️ Information ancienne :
-                                à confirmer sur place.
+                                {t("⚠️ Information ancienne : à confirmer sur place.")}
                               </p>
                             )}
 
@@ -1066,16 +1063,15 @@ const guestFreeOfferUsed = (() => {
                               displayStatus === 'full' &&
                               beach.bus && (
                                 <p className="bus-info">
-                                  🚌 Alternative :{' '}
-                                  {beach.bus}
+                                  {t('🚌 Alternative :')}{' '}
+                                  {t(beach.bus)}
                                 </p>
                               )}
 
                             {effectiveUnlock && (selectedBeach === beach.id ? (
                               <div className="report-panel">
                                 <p>
-                                  Que constatez-vous
-                                  sur place ?
+                                  {t("Que constatez-vous sur place ?")}
                                 </p>
 
                                 <div className="report-buttons">
@@ -1091,8 +1087,8 @@ const guestFreeOfferUsed = (() => {
                                     }
                                   >
                                     {isSubmitting
-                                      ? '⏳ Envoi en cours…'
-                                      : '🟢 Il reste des places'}
+                                      ? t("⏳ Envoi en cours…")
+                                      : t("🟢 Il reste des places")}
                                   </button>
 
                                   <button
@@ -1107,8 +1103,8 @@ const guestFreeOfferUsed = (() => {
                                     }
                                   >
                                     {isSubmitting
-                                      ? '⏳ Envoi en cours…'
-                                      : '🔴 Parking complet'}
+                                      ? t("⏳ Envoi en cours…")
+                                      : t("🔴 Parking complet")}
                                   </button>
                                 </div>
 
@@ -1120,7 +1116,7 @@ const guestFreeOfferUsed = (() => {
                                     setSelectedBeach(null)
                                   }
                                 >
-                                  Annuler
+                                  {t("Annuler")}
                                 </button>
                               </div>
                             ) : (
@@ -1131,8 +1127,7 @@ const guestFreeOfferUsed = (() => {
                                   setSelectedBeach(beach.id)
                                 }
                               >
-                                Signaler l'état
-                                de ce parking
+                                {t("Signaler l'état de ce parking")}
                               </button>
                             ))}
                           </>
@@ -1147,8 +1142,7 @@ const guestFreeOfferUsed = (() => {
                               fontSize: '14px',
                             }}
                           >
-                            🚧 Signalement bientôt
-                            disponible pour cette plage.
+                            {t("🚧 Signalement bientôt disponible pour cette plage.")}
                           </div>
                         )}
                       </section>
@@ -1202,15 +1196,11 @@ const guestFreeOfferUsed = (() => {
 
         <aside className="notice">
           <strong>
-            ℹ️ Informations participatives
+            {t("ℹ️ Informations participatives")}
           </strong>
 
           <p>
-            Les informations sont partagées par les
-            visiteurs et peuvent évoluer rapidement.
-            Elles sont données à titre indicatif :
-            vérifiez toujours la situation sur place
-            avant de vous déplacer.
+            {t("Les informations sont partagées par les visiteurs et peuvent évoluer rapidement. Elles sont données à titre indicatif : vérifiez toujours la situation sur place avant de vous déplacer.")}
           </p>
         </aside>
       </main>
@@ -1225,39 +1215,39 @@ const guestFreeOfferUsed = (() => {
               <button type="button" className="auth-close" aria-label="Fermer" onClick={() => setAuthModalOpen(false)}>×</button>
             </div>
             <h2 id="auth-title" className="auth-title">
-              {userId ? 'Mon compte' : 'Bienvenue sur Begur Plages'}
+              {userId ? t('Mon compte') : t('Bienvenue sur Begur Plages')}
             </h2>
             {userId ? (
               <div className="auth-account"><GoogleLogin /></div>
             ) : (
               <>
-                <p className="auth-intro">Connectez-vous pour profiter pleinement des plages de la Costa Brava.</p>
+                <p className="auth-intro">{t("Connectez-vous pour profiter pleinement des plages de la Costa Brava.")}</p>
                 <div className="auth-methods">
                   {!emailLoginOpen ? (
                     <>
                       <div className="auth-google"><GoogleLogin /></div>
                       <button type="button" className="auth-email-choice" onClick={() => setEmailLoginOpen(true)}>
                         <span className="auth-method-icon" aria-hidden="true">✉</span>
-                        Continuer avec E-mail
+                        {t("Continuer avec E-mail")}
                       </button>
-                      <div className="auth-divider"><span>Autres options</span></div>
+                      <div className="auth-divider"><span>{t("Autres options")}</span></div>
                       <button type="button" className="auth-unavailable" disabled>
-                        <span><span className="auth-method-icon" aria-hidden="true">●</span> Continuer avec Apple</span>
-                        <small>Bientôt disponible</small>
+                        <span><span className="auth-method-icon" aria-hidden="true">●</span> {t("Continuer avec Apple")}</span>
+                        <small>{t("Bientôt disponible")}</small>
                       </button>
                       <button type="button" className="auth-unavailable" disabled>
-                        <span><span className="auth-method-icon" aria-hidden="true">▯</span> Continuer avec un téléphone</span>
-                        <small>Bientôt disponible</small>
+                        <span><span className="auth-method-icon" aria-hidden="true">▯</span> {t("Continuer avec un téléphone")}</span>
+                        <small>{t("Bientôt disponible")}</small>
                       </button>
                     </>
                   ) : (
                     <div className="auth-email-step">
-                      <button type="button" className="auth-back" onClick={() => setEmailLoginOpen(false)}>← Retour aux options</button>
+                      <button type="button" className="auth-back" onClick={() => setEmailLoginOpen(false)}>{t("← Retour aux options")}</button>
                       <EmailLogin />
                     </div>
                   )}
                 </div>
-                <p className="auth-footer-note">Connexion sécurisée · Aucun mot de passe nécessaire pour l’e-mail</p>
+                <p className="auth-footer-note">{t("Connexion sécurisée · Aucun mot de passe nécessaire pour l’e-mail")}</p>
               </>
             )}
           </section>
@@ -1266,12 +1256,13 @@ const guestFreeOfferUsed = (() => {
 
       <footer className="site-footer">
         <p>
-          Begur Plages — Un petit site pour éviter
-          les trajets inutiles.
+          {t("Begur Plages — Un petit site pour éviter les trajets inutiles.")}
         </p>
       </footer>
     </div>
   )
 }
 
-export default App
+export default function MultilingualApp() {
+  return <LanguageProvider><App /></LanguageProvider>
+}

@@ -668,3 +668,10 @@ a {
 .beach-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,253,247,.43), rgba(255,253,247,.55)), linear-gradient(0deg, rgba(255,253,247,.88), transparent 34%); }
 .beach-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 48%; }
 .beach-photo figcaption { position: absolute; right: 12px; bottom: 7px; z-index: 1; color: #75817d; font-size: 9px; text-align: right; }
+
+/* Phase 4 — sélecteur de langue */
+.header-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.language-picker { display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(255,255,255,.65); border-radius: 9px; padding: 8px 6px 8px 9px; color: #fffdf7; font-size: 14px; }
+.language-picker select { background: transparent; color: #fffdf7; border: none; font-size: 12px; font-weight: 800; cursor: pointer; max-width: 55px; }
+.language-picker option { color: #10535e; background: #fffdf7; }
+@media (max-width: 440px) { .header-title-row { gap: 7px; } .header-actions { gap: 5px; } .header-login { padding: 9px 8px; font-size: 11px; } .language-picker { padding: 7px 4px; } .site-header h1 { font-size: 24px; } }

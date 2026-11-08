@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { supabase } from './supabase'
+import { useLanguage } from './i18n'
 
 const REFERRAL_STORAGE_KEY = 'begur_plages_referral_code'
 
@@ -25,6 +26,7 @@ function getStoredReferralCode(): string | null {
 }
 
 export default function EmailLogin() {
+  const { t } = useLanguage()
   const [email, setEmail] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [isSending, setIsSending] = useState(false)
@@ -69,13 +71,13 @@ export default function EmailLogin() {
 
     if (!normalizedEmail) {
       setIsError(true)
-      setMessage('Veuillez saisir votre adresse e-mail.')
+      setMessage(t("Veuillez saisir votre adresse e-mail."))
       return
     }
 
     setIsSending(true)
     setIsError(false)
-    setMessage('Envoi du lien de connexion…')
+    setMessage(t("Envoi du lien de connexion…"))
 
     try {
       // Récupérer le code de parrainage mémorisé
@@ -108,20 +110,20 @@ export default function EmailLogin() {
 
         setIsError(true)
         setMessage(
-          "Impossible d'envoyer le lien. Vérifiez votre adresse e-mail et réessayez."
+          t("Impossible d'envoyer le lien. Vérifiez votre adresse e-mail et réessayez.")
         )
         return
       }
 
       setMessage(
-        '📩 Vérifiez votre boîte e-mail. Un lien de connexion vient de vous être envoyé.'
+        t("📩 Vérifiez votre boîte e-mail. Un lien de connexion vient de vous être envoyé.")
       )
     } catch (error) {
       console.error('Erreur inattendue :', error)
 
       setIsError(true)
       setMessage(
-        "Une erreur est survenue pendant l'envoi du lien."
+        t("Une erreur est survenue pendant l'envoi du lien.")
       )
     } finally {
       setIsSending(false)
@@ -143,12 +145,11 @@ export default function EmailLogin() {
       }}
     >
       <h3 style={{ marginTop: 0 }}>
-        ✉️ Connexion par e-mail
+        {t("✉️ Connexion par e-mail")}
       </h3>
 
       <p>
-        Recevez un lien de connexion sécurisé,
-        sans mot de passe.
+        {t("Recevez un lien de connexion sécurisé, sans mot de passe.")}
       </p>
 
       <form onSubmit={handleSubmit}>
@@ -160,7 +161,7 @@ export default function EmailLogin() {
             fontWeight: 600,
           }}
         >
-          Votre adresse e-mail
+          {t("Votre adresse e-mail")}
         </label>
 
         <input
@@ -200,8 +201,8 @@ export default function EmailLogin() {
           }}
         >
           {isSending
-            ? '⏳ Envoi en cours…'
-            : '📩 Recevoir mon lien de connexion'}
+            ? t("⏳ Envoi en cours…")
+            : t("📩 Recevoir mon lien de connexion")}
         </button>
       </form>
 

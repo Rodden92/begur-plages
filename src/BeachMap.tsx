@@ -1,3 +1,4 @@
+import { useLanguage } from './i18n'
 import { useEffect, useState } from 'react'
 import {
   MapContainer,
@@ -111,47 +112,48 @@ function getStatusColor(status: ParkingStatus): string {
   return '#858c8b'
 }
 
-function getStatusLabel(status: ParkingStatus): string {
+function getStatusLabel(status: ParkingStatus, t: (key: string) => string): string {
   if (status === 'available') {
-    return '🟢 Places disponibles signalées'
+    return t("🟢 Places disponibles signalées")
   }
 
   if (status === 'full') {
-    return '🔴 Parking signalé complet'
+    return t("🔴 Parking signalé complet")
   }
 
-  return '⚪ Disponibilité inconnue'
+  return t("⚪ Disponibilité inconnue")
 }
 
-function getParkingTypeLabel(type: string): string {
+function getParkingTypeLabel(type: string, t: (key: string) => string): string {
   switch (type) {
     case 'public':
-      return 'Parking public'
+      return t("Parking public")
     case 'free':
-      return 'Stationnement gratuit'
+      return t("Stationnement gratuit")
     case 'private_paid':
-      return 'Parking privé payant'
+      return t("Parking privé payant")
     default:
-      return 'Type de stationnement à confirmer'
+      return t("Type de stationnement à confirmer")
   }
 }
 
 function getVerificationLabel(
-  parking: MapParking
+  parking: MapParking,
+  t: (key: string) => string
 ): string {
   if (parking.isEstimated) {
-    return '📍 Position estimée — à vérifier sur place'
+    return t("📍 Position estimée — à vérifier sur place")
   }
 
   if (parking.verificationStatus === 'verified') {
-    return '✅ Emplacement vérifié'
+    return t("✅ Emplacement vérifié")
   }
 
   if (parking.verificationStatus === 'to_confirm') {
-    return '🟠 Emplacement à confirmer'
+    return t("🟠 Emplacement à confirmer")
   }
 
-  return '⚪ Emplacement provisoire'
+  return t("⚪ Emplacement provisoire")
 }
 
 function getBeachNames(beachIds: string[]): string {
@@ -198,6 +200,7 @@ export default function BeachMap({
   now,
 }: BeachMapProps) {
   void now
+  const { t } = useLanguage()
   const [parkings, setParkings] = useState<MapParking[]>(
     fallbackParkings
   )
@@ -348,25 +351,23 @@ export default function BeachMap({
           lineHeight: 1.6,
         }}
       >
-        <strong>🚗 Carte des stationnements</strong>
+        <strong>{t("🚗 Carte des stationnements")}</strong>
 
         <div>
-          🟩 P : places signalées disponibles · 🟥 P : complet
+          {t("🟩 P : places signalées disponibles · 🟥 P : complet")}
         </div>
 
         <div>
-          🏖️ Plages · 🟧 P : position provisoire · ⬜ P : statut inconnu
+          {t("🏖️ Plages · 🟧 P : position provisoire · ⬜ P : statut inconnu")}
         </div>
 
         <div>
-          Les points estimés servent au repérage :
-          ils ne correspondent pas nécessairement
-          aux entrées des parkings.
+          {t("Les points estimés servent au repérage : ils ne correspondent pas nécessairement aux entrées des parkings.")}
         </div>
       </div>
 
       {loading && (
-        <p>Chargement des parkings…</p>
+        <p>{t("Chargement des parkings…")}</p>
       )}
 
       {loadError && (
@@ -377,17 +378,13 @@ export default function BeachMap({
             fontSize: '14px',
           }}
         >
-          Impossible de charger les parkings depuis
-          Supabase. Affichage du parking local de
-          secours.
+          {t("Impossible de charger les parkings depuis Supabase. Affichage du parking local de secours.")}
         </p>
       )}
 
       {!loading && !loadError && (
         <p style={{ fontSize: '14px' }}>
-          <strong>{parkings.length}</strong> emplacement
-          {parkings.length > 1 ? 's' : ''} affiché
-          {parkings.length > 1 ? 's' : ''}.
+          <strong>{parkings.length}</strong> {' '}{t(parkings.length > 1 ? 'emplacements' : 'emplacement')} {t(parkings.length > 1 ? 'affichés' : 'affiché')}.
         </p>
       )}
 
@@ -478,39 +475,38 @@ export default function BeachMap({
                     <br />
 
                     <strong>
-                      {getVerificationLabel(parking)}
+                      {getVerificationLabel(parking, t)}
                     </strong>
 
                     <br />
 
                     {getParkingTypeLabel(
-                      parking.parkingType
+                      parking.parkingType, t
                     )}
 
                     <br />
                     <br />
 
                     <strong>
-                      Plages associées :
+                      {t("Plages associées :")}
                     </strong>
 
                     <br />
 
                     {getBeachNames(parking.beachIds) ||
-                      'Association à vérifier'}
+                      t("Association à vérifier")}
 
                     <br />
                     <br />
 
                     <strong>
-                      {getStatusLabel(status)}
+                      {getStatusLabel(status, t)}
                     </strong>
 
                     <br />
 
                     <small>
-                      Les signalements actuels
-                      concernent les plages associées.
+                      {t("Les signalements actuels concernent les plages associées.")}
                     </small>
 
                     {parking.fieldCheckNotes && (
@@ -519,7 +515,7 @@ export default function BeachMap({
                         <br />
 
                         <strong>
-                          📝 Vérification terrain :
+                          {t("📝 Vérification terrain :")}
                         </strong>
 
                         <br />
@@ -544,9 +540,7 @@ export default function BeachMap({
                       <>
                         <br />
                         <small>
-                          ⚠️ Point de repérage
-                          uniquement, pas une
-                          entrée confirmée.
+                          {t("⚠️ Point de repérage uniquement, pas une entrée confirmée.")}
                         </small>
                       </>
                     )}
