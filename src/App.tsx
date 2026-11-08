@@ -58,6 +58,37 @@ const REPORTABLE_BEACH_IDS = [
   'cala-del-golfet',
 ]
 
+// Photographies Wikimedia Commons : une image distincte pour chaque plage.
+// Certaines petites criques utilisent une vue illustrative du littoral voisin.
+const BEACH_PHOTOS: Record<string, { file: string; description: string }> = {
+  'platja-del-raco': { file: 'Platja de Pals - panoramio.jpg', description: 'Vue du littoral de Pals, secteur du Racó' },
+  'illa-roja': { file: 'Illa Roja.jpg', description: 'Illa Roja' },
+  'sa-riera': { file: 'Sa Riera beach.JPG', description: 'Sa Riera' },
+  'aiguafreda': { file: 'Begur Sa Tuna 01 JMM.JPG', description: 'Littoral de Begur, près d’Aiguafreda' },
+  'sa-tuna': { file: 'Platja de sa Tuna 1.JPG', description: 'Sa Tuna' },
+  'platja-fonda': { file: 'Platja Fonda de Begur.jpg', description: 'Platja Fonda' },
+  'fornells': { file: "Cala d'Aiguablava, Begur.jpg", description: 'Côte de Fornells et Aiguablava' },
+  'aiguablava': { file: 'Playa aiguablava 1.jpg', description: 'Aiguablava' },
+  'aigua-xelida': { file: 'Platja de Tamariu des del Portilló.jpg', description: 'Littoral de Tamariu, près d’Aigua Xelida' },
+  'tamariu': { file: 'Tamariu beach.jpg', description: 'Tamariu' },
+  'els-liris': { file: 'Beach in Tamariu 01.jpg', description: 'Plage de Tamariu, secteur Els Liris' },
+  'aiguadolca': { file: 'Platja de Tamariu, Aiguadolça.jpg', description: 'Aiguadolça à Tamariu' },
+  'cala-pedrosa': { file: "Vista d ' una petita platja.jpeg", description: 'Crique du littoral de Palafrugell' },
+  'llafranc': { file: 'Vista de Calella de Palafrugell - panoramio.jpg', description: 'Littoral de Calella et Llafranc' },
+  'port-bo': { file: 'Port Bo de Calella de Palafrugell.JPG', description: 'Port Bo' },
+  'malaespina': { file: 'Calella de Palafrugell-.jpg', description: 'Calella de Palafrugell, secteur Malaespina' },
+  'sant-roc': { file: 'Platja de Sant Roc (Calella de Palafrugell) - 1.jpg', description: 'Sant Roc' },
+  'cala-del-golfet': { file: 'Detall camí de ronda Calella de Palafrugell al Golfet - panoramio (1).jpg', description: 'Littoral vers le Golfet' },
+}
+
+function commonsFileUrl(file: string): string {
+  return `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(file)}?width=960`
+}
+
+function commonsPageUrl(file: string): string {
+  return `https://commons.wikimedia.org/wiki/File:${encodeURIComponent(file)}`
+}
+
 const BUS_INFO: Record<string, string> = {
   'sa-riera': 'Bus Platges – ligne Sa Riera',
   'sa-tuna': 'Bus Platges – ligne Sa Tuna',
@@ -871,12 +902,14 @@ const guestFreeOfferUsed = (() => {
                       >
                         <figure className="beach-photo">
                             <img
-                              src="https://commons.wikimedia.org/wiki/Special:FilePath/Sa_Riera_beach.JPG?width=960"
-                              alt="Photo illustrative de Sa Riera, utilisée temporairement pour toutes les plages"
+                              src={commonsFileUrl(BEACH_PHOTOS[beach.id].file)}
+                              alt={BEACH_PHOTOS[beach.id].description}
                               loading="lazy"
                             />
                             <figcaption>
-                              Photo provisoire : Sa Riera · PaddyBriggs (Wikimedia Commons)
+                              <a href={commonsPageUrl(BEACH_PHOTOS[beach.id].file)} target="_blank" rel="noopener noreferrer">
+                                Photo : Wikimedia Commons · auteur et licence
+                              </a>
                             </figcaption>
                           </figure>
                         <div className="beach-top">
