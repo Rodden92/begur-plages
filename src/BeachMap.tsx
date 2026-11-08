@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react'
 import {
   MapContainer,
   TileLayer,
-  CircleMarker,
+  Marker,
   Popup,
   useMap,
 } from 'react-leaflet'
-import { LatLngBounds } from 'leaflet'
+import { LatLngBounds, divIcon } from 'leaflet'
 import { supabase } from './supabase'
 import { beachLocations } from './beaches'
 import { parkingLocations } from './parkings'
@@ -58,17 +58,6 @@ type MapParking = {
   fieldCheckNotes: string | null
 }
 
-const EXPIRED_MINUTES = 20
-
-// Les signalements sont actuellement disponibles
-// uniquement pour ces quatre plages.
-const REPORTABLE_BEACH_IDS = [
-  'sa-riera',
-  'sa-tuna',
-  'aiguablava',
-  'fornells',
-]
-
 // Solution de secours : le parking Sa Riera
 // déjà présent dans src/parkings.ts.
 const fallbackParkings: MapParking[] = parkingLocations.map(
@@ -86,43 +75,34 @@ const fallbackParkings: MapParking[] = parkingLocations.map(
 
 function getParkingStatus(
   parking: MapParking,
-  beaches: BeachReport[],
-  now: number
+  beaches: BeachReport[]
 ): ParkingStatus {
-  // Les signalements actuels concernent une plage,
-  // et non un parking précis.
-  //
-  // On ne les affiche donc que si un seul identifiant
-  // de plage autorisé correspond à ce parking.
-  const reportableBeachIds = parking.beachIds.filter(
-    (beachId) => REPORTABLE_BEACH_IDS.includes(beachId)
-  )
-
-  if (reportableBeachIds.length !== 1) {
-    return 'unknown'
-  }
-
-  const beach = beaches.find(
-    (item) => item.id === reportableBeachIds[0]
-  )
-
-  if (!beach || !beach.updatedAt) {
-    return 'unknown'
-  }
-
-  const reportTime = new Date(beach.updatedAt).getTime()
-
-  if (!Number.isFinite(reportTime)) {
-    return 'unknown'
-  }
-
-  const ageMinutes = (now - reportTime) / 60_000
-
-  if (ageMinutes < 0 || ageMinutes >= EXPIRED_MINUTES) {
-    return 'unknown'
-  }
-
+  // Un signalement porte sur une plage, pas sur un parking précis.
+  // Ne pas attribuer arbitrairement un statut à un parking partagé.
+  if (parking.beachIds.length !== 1) return 'unknown'
+  const beach = beaches.find((item) => item.id === parking.beachIds[0])
+  if (!beach?.updatedAt) return 'unknown'
   return beach.status
+}
+
+function createMapIcon(kind: 'beach' | 'parking', color?: string) {
+  if (kind === 'beach') {
+    // Parasol et deux vagues, sans pastille : un repère fin et léger.
+    return divIcon({
+      className: 'begur-map-marker',
+      html: `<span style="display:grid;place-items:center;width:30px;height:30px;background:rgba(255,253,247,.62);border-radius:9px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.12))" aria-hidden="true"><svg width="25" height="25" viewBox="0 0 28 28" fill="none" stroke="#176b76" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 12.3c1.9-4.8 5-7 9.5-7s7.6 2.2 9.5 7c-2-1.3-3.7-1.3-5.4 0-2.5-1.4-5.7-1.4-8.2 0-1.7-1.3-3.4-1.3-5.4 0Z"/><path d="M14 5.3v13.8c0 2.1-1.1 3-2.7 3-1.1 0-1.9-.6-2.2-1.5"/><path d="M17.5 20.2c1.4-.8 2.6-.8 4 0M17.5 23c1.4-.8 2.6-.8 4 0"/></svg></span>`,
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
+      popupAnchor: [0, -15],
+    })
+  }
+  return divIcon({
+    className: 'begur-map-marker',
+    html: `<span style="display:grid;place-items:center;width:26px;height:26px;border:1.5px solid ${color ?? '#858c8b'};border-radius:6px;background:rgba(255,253,247,.9);color:${color ?? '#858c8b'};font-size:15px;font-family:Arial,sans-serif;font-weight:500;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.12)" aria-hidden="true">P</span>`,
+    iconSize: [26, 26],
+    iconAnchor: [13, 13],
+    popupAnchor: [0, -13],
+  })
 }
 
 function getStatusColor(status: ParkingStatus): string {
@@ -217,6 +197,7 @@ export default function BeachMap({
   beaches,
   now,
 }: BeachMapProps) {
+  void now
   const [parkings, setParkings] = useState<MapParking[]>(
     fallbackParkings
   )
@@ -370,11 +351,11 @@ export default function BeachMap({
         <strong>🚗 Carte des stationnements</strong>
 
         <div>
-          🟢 Places signalées disponibles · 🔴 Complet
+          🟩 P : places signalées disponibles · 🟥 P : complet
         </div>
 
         <div>
-          🟠 Position à confirmer · ⚪ Point provisoire
+          🏖️ Plages · 🟧 P : position provisoire · ⬜ P : statut inconnu
         </div>
 
         <div>
@@ -437,16 +418,10 @@ export default function BeachMap({
 
           {/* Marqueurs des 18 plages */}
           {beachLocations.map((beach) => (
-            <CircleMarker
+            <Marker
               key={`beach-${beach.id}`}
-              center={beach.position}
-              radius={7}
-              pathOptions={{
-                color: '#10535e',
-                fillColor: '#d97956',
-                fillOpacity: 0.9,
-                weight: 2,
-              }}
+              position={beach.position}
+              icon={createMapIcon('beach')}
             >
               <Popup>
                 <div>
@@ -455,15 +430,14 @@ export default function BeachMap({
                   📍 {beach.sector}
                 </div>
               </Popup>
-            </CircleMarker>
+            </Marker>
           ))}
 
           {/* Marqueurs des parkings Supabase */}
           {parkings.map((parking) => {
             const status = getParkingStatus(
               parking,
-              beaches,
-              now
+              beaches
             )
 
             const isProvisional =
@@ -484,16 +458,10 @@ export default function BeachMap({
                   : '#858c8b'
 
             return (
-              <CircleMarker
+              <Marker
                 key={`parking-${parking.id}`}
-                center={parking.position}
-                radius={11}
-                pathOptions={{
-                  color: '#ffffff',
-                  fillColor: markerColor,
-                  fillOpacity: 1,
-                  weight: 3,
-                }}
+                position={parking.position}
+                icon={createMapIcon('parking', markerColor)}
               >
                 <Popup>
                   <div
@@ -584,7 +552,7 @@ export default function BeachMap({
                     )}
                   </div>
                 </Popup>
-              </CircleMarker>
+              </Marker>
             )
           })}
         </MapContainer>

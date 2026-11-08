@@ -659,3 +659,12 @@ a {
 .auth-footer-note { margin: 23px 0 0; color: #9a9e99; text-align: center; font-size: 11px; line-height: 1.6; }
 .auth-account { margin-top: 20px; }
 @media (max-width: 420px) { .auth-dialog { padding: 24px 20px; border-radius: 17px; } .auth-unavailable { flex-wrap: wrap; } }
+
+/* Photo discrète en filigrane : conserve la hauteur habituelle des fiches. */
+.beach-card--photo { isolation: isolate; padding-bottom: 32px; }
+.beach-card--photo > :not(.beach-photo) { position: relative; z-index: 1; }
+.beach-card--photo::before { z-index: 2; }
+.beach-photo { position: absolute; inset: 0; margin: 0; z-index: 0; pointer-events: none; }
+.beach-photo::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,253,247,.43), rgba(255,253,247,.55)), linear-gradient(0deg, rgba(255,253,247,.88), transparent 34%); }
+.beach-photo img { width: 100%; height: 100%; object-fit: cover; object-position: center 48%; }
+.beach-photo figcaption { position: absolute; right: 12px; bottom: 7px; z-index: 1; color: #75817d; font-size: 9px; text-align: right; }

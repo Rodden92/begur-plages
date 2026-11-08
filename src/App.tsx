@@ -866,9 +866,19 @@ const guestFreeOfferUsed = (() => {
 
                     return (
                       <section
-                        className="beach-card"
+                        className="beach-card beach-card--photo"
                         key={beach.id}
                       >
+                        <figure className="beach-photo">
+                            <img
+                              src="https://commons.wikimedia.org/wiki/Special:FilePath/Sa_Riera_beach.JPG?width=960"
+                              alt="Photo illustrative de Sa Riera, utilisée temporairement pour toutes les plages"
+                              loading="lazy"
+                            />
+                            <figcaption>
+                              Photo provisoire : Sa Riera · PaddyBriggs (Wikimedia Commons)
+                            </figcaption>
+                          </figure>
                         <div className="beach-top">
                           <h3>{beach.name}</h3>
 
