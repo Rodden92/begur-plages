@@ -249,7 +249,10 @@ function App() {
       setBeaches((previous) => previous.map((beach) => {
         const report = latestByBeach.get(beach.id)
         if (!report || (report.status !== 'available' && report.status !== 'full')) return beach
-        const communityInfo = communityResult.data?.find((row) => row.beach_id === beach.id && row.report_id === report.id)
+        const communityInfo = communityResult.data?.find(
+  (row: { beach_id: string; report_id: number }) =>
+    row.beach_id === beach.id && row.report_id === report.id
+)
         return {
           ...beach,
           status: report.status as ReportStatus,
