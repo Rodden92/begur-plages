@@ -18,6 +18,10 @@ type Beach = {
   sector: string
   status: Status
   updatedAt: string | null
+  reportId: number | null
+  reporterUsername: string | null
+  confirmedAt: string | null
+  confirmerUsername: string | null
   bus: string
   canReport: boolean
 }
@@ -104,6 +108,10 @@ const initialBeaches: Beach[] = beachLocations.map(
     sector: beach.sector,
     status: 'unknown',
     updatedAt: null,
+    reportId: null,
+    reporterUsername: null,
+    confirmedAt: null,
+    confirmerUsername: null,
     bus: BUS_INFO[beach.id] ?? '',
     canReport: REPORTABLE_BEACH_IDS.includes(beach.id),
   })
@@ -193,6 +201,12 @@ function App() {
   // Déblocage des plages
   const [userId, setUserId] = useState<string | null>(null)
   const [pointsBalance, setPointsBalance] = useState<number | null>(null)
+  const [community, setCommunity] = useState({ username: '', reports: 0, confirmations: 0 })
+  const [editingUsername, setEditingUsername] = useState(false)
+  const [usernameDraft, setUsernameDraft] = useState('')
+  const [savingUsername, setSavingUsername] = useState(false)
+  const [confirmingBeachId, setConfirmingBeachId] = useState<string | null>(null)
+  const [onSiteAction, setOnSiteAction] = useState<null | { beachId: string; action: 'confirm' | 'report' }>(null)
   const [freeBeachUnlockUsed, setFreeBeachUnlockUsed] = useState(false)
     
 
@@ -210,53 +224,42 @@ function App() {
     let isActive = true
 
     async function loadReports() {
-      const { data, error } = await supabase
-        .from('parking_reports')
-        .select('beach_id, status, created_at')
-        .order('created_at', { ascending: false })
-        .limit(100)
+      // Conserver le canal de lecture des statuts déjà utilisé par le site.
+      // La nouvelle vue ne contient aucune donnée de statut.
+      const [reportsResult, communityResult] = await Promise.all([
+        supabase.from('parking_reports')
+          .select('id, beach_id, status, created_at')
+          .order('created_at', { ascending: false })
+          .limit(1000),
+        supabase.rpc('community_visible_reports'),
+      ])
 
       if (!isActive) return
-
-      if (error) {
-        console.error('Erreur Supabase :', error.message)
+      if (reportsResult.error) {
+        console.error('Erreur de chargement des signalements :', reportsResult.error.message)
         return
       }
-
-      setBeaches((previous) =>
-        previous.map((beach) => {
-          if (!beach.canReport) return beach
-
-          const latestReport = data?.find(
-            (report) => report.beach_id === beach.id
-          )
-
-          if (!latestReport) return beach
-
-          if (
-            latestReport.status !== 'available' &&
-            latestReport.status !== 'full'
-          ) {
-            return beach
-          }
-
-          const previousTime = beach.updatedAt
-            ? new Date(beach.updatedAt).getTime()
-            : 0
-
-          const reportTime = new Date(
-            latestReport.created_at
-          ).getTime()
-
-          if (reportTime < previousTime) return beach
-
-          return {
-            ...beach,
-            status: latestReport.status,
-            updatedAt: latestReport.created_at,
-          }
-        })
-      )
+      if (communityResult.error) {
+        console.error('Erreur de chargement communautaire :', communityResult.error.message)
+      }
+      const latestByBeach = new Map<string, { id: number; beach_id: string; status: string; created_at: string }>()
+      for (const report of reportsResult.data ?? []) {
+        if (!latestByBeach.has(report.beach_id)) latestByBeach.set(report.beach_id, report)
+      }
+      setBeaches((previous) => previous.map((beach) => {
+        const report = latestByBeach.get(beach.id)
+        if (!report || (report.status !== 'available' && report.status !== 'full')) return beach
+        const communityInfo = communityResult.data?.find((row) => row.beach_id === beach.id && row.report_id === report.id)
+        return {
+          ...beach,
+          status: report.status as ReportStatus,
+          updatedAt: report.created_at,
+          reportId: report.id,
+          reporterUsername: communityInfo?.reporter_username ?? null,
+          confirmedAt: communityInfo?.confirmed_at ?? null,
+          confirmerUsername: communityInfo?.confirmer_username ?? null,
+        }
+      }))
     }
 
     void loadReports()
@@ -299,6 +302,7 @@ function App() {
 
       setUserId(nextUserId)
       setPointsBalance(null)
+      setCommunity({ username: '', reports: 0, confirmations: 0 })
       setUnlocks([])
 
       if (!nextUserId) {
@@ -309,7 +313,7 @@ function App() {
 
       setLoadingAccount(true)
 
-      const [profileResult, unlocksResult] = await Promise.all([
+      const [profileResult, unlocksResult, communityResult] = await Promise.all([
         supabase
           .from('profiles')
           .select('points_balance, free_beach_unlock_used')
@@ -320,6 +324,7 @@ function App() {
           .from('beach_unlocks')
           .select('beach_id, expires_at')
           .eq('user_id', nextUserId),
+        supabase.rpc('community_my_stats'),
       ])
 
       if (!isActive || currentRequest !== requestNumber) {
@@ -343,6 +348,11 @@ function App() {
         )
       } else {
         setUnlocks(unlocksResult.data ?? [])
+      }
+
+      if (!communityResult.error && communityResult.data?.[0]) {
+        const stats = communityResult.data[0]
+        setCommunity({ username: stats.username ?? '', reports: Number(stats.report_count), confirmations: Number(stats.confirmation_count) })
       }
 
       setLoadingAccount(false)
@@ -387,7 +397,7 @@ function App() {
   // --------------------------------------------------
 
   async function refreshUnlocks(currentUserId: string) {
-    const [profileResult, unlocksResult] = await Promise.all([
+    const [profileResult, unlocksResult, communityResult] = await Promise.all([
       supabase
         .from('profiles')
        .select('points_balance, free_beach_unlock_used')
@@ -398,6 +408,7 @@ function App() {
         .from('beach_unlocks')
         .select('beach_id, expires_at')
         .eq('user_id', currentUserId),
+      supabase.rpc('community_my_stats'),
     ])
 
     if (profileResult.error) {
@@ -408,6 +419,11 @@ function App() {
     } else {
       setPointsBalance(profileResult.data.points_balance)
       setFreeBeachUnlockUsed(profileResult.data.free_beach_unlock_used)
+    }
+
+    if (!communityResult.error && communityResult.data?.[0]) {
+      const stats = communityResult.data[0]
+      setCommunity({ username: stats.username ?? '', reports: Number(stats.report_count), confirmations: Number(stats.confirmation_count) })
     }
 
     if (unlocksResult.error) {
@@ -579,6 +595,57 @@ function unlockGuestBeach(beachId: string) {
   // 6. Signaler un parking
   // --------------------------------------------------
 
+  async function saveUsername() {
+    if (savingUsername || !userId) return
+    setSavingUsername(true)
+    const { data, error } = await supabase.rpc('community_set_username', { p_username: usernameDraft })
+    setSavingUsername(false)
+    if (error) { setMessage(error.message); return }
+    setCommunity((previous) => ({ ...previous, username: String(data) }))
+    setEditingUsername(false)
+    setMessage(t('Pseudonyme enregistré.'))
+  }
+
+  async function confirmReport(beach: Beach) {
+    if (confirmingBeachId || !beach.reportId) return
+    setConfirmingBeachId(beach.id)
+    const { data, error } = await supabase.functions.invoke('confirm-parking-report', {
+      body: { report_id: beach.reportId },
+    })
+    setConfirmingBeachId(null)
+    if (error || !data?.success) {
+      setMessage(t('Impossible de confirmer. Actualisez et réessayez.'))
+      return
+    }
+    setBeaches((previous) => previous.map((item) => item.id === beach.id ? {
+      ...item, confirmedAt: new Date().toISOString(),
+      confirmerUsername: community.username || null,
+    } : item))
+    if (userId) await refreshUnlocks(userId)
+    setNow(Date.now())
+    setMessage(data.points_earned === 2 ? t('Merci ! Confirmation enregistrée (+2 points).') : t('Merci ! Confirmation enregistrée.'))
+  }
+
+  function askOnSite(beachId: string, action: 'confirm' | 'report') {
+    setOnSiteAction({ beachId, action })
+  }
+
+  function acceptOnSite() {
+    if (!onSiteAction) return
+    const { beachId, action } = onSiteAction
+    setOnSiteAction(null)
+    if (action === 'report') setSelectedBeach(beachId)
+    else {
+      const beach = beaches.find((item) => item.id === beachId)
+      if (beach) void confirmReport(beach)
+    }
+  }
+
+  const contributionTotal = community.reports + community.confirmations
+  const badge = contributionTotal >= 50 ? 'Ambassadeur' : contributionTotal >= 20 ? 'Éclaireur' : contributionTotal >= 5 ? 'Explorateur' : 'Nouveau'
+  const nextBadge = contributionTotal >= 50 ? null : contributionTotal >= 20 ? 'Ambassadeur' : contributionTotal >= 5 ? 'Éclaireur' : 'Explorateur'
+  const nextThreshold = contributionTotal >= 20 ? 50 : contributionTotal >= 5 ? 20 : 5
+
   async function reportStatus(
     beachId: string,
     status: ReportStatus
@@ -623,6 +690,10 @@ function unlockGuestBeach(beachId: string) {
                 ...beach,
                 status,
                 updatedAt: new Date().toISOString(),
+                reportId: null,
+                reporterUsername: community.username || null,
+                confirmedAt: null,
+                confirmerUsername: null,
               }
             : beach
         )
@@ -830,7 +901,7 @@ function unlockGuestBeach(beachId: string) {
 
                   {sectorBeaches.map((beach) => {
                     const freshness = getFreshness(
-                      beach.updatedAt,
+                      beach.confirmedAt ?? beach.updatedAt,
                       now
                     )
 
@@ -1053,6 +1124,13 @@ const guestFreeOfferUsed = (() => {
                               )}
                             </p>
 
+                            {effectiveUnlock && beach.reportId && (
+                              <div className="community-report-details">
+                                <span>{t('Signalé par')} {beach.reporterUsername ?? t('Visiteur anonyme')}</span>
+                                {beach.confirmedAt && <span>{t('Confirmé le')} {new Date(beach.confirmedAt).toLocaleString(locale)} · {beach.confirmerUsername ?? t('Visiteur anonyme')}</span>}
+                              </div>
+                            )}
+
                             {freshness === 'old' && (
                               <p className="updated-at">
                                 {t("⚠️ Information ancienne : à confirmer sur place.")}
@@ -1068,6 +1146,16 @@ const guestFreeOfferUsed = (() => {
                                 </p>
                               )}
 
+                            {effectiveUnlock && beach.reportId && (
+                              <div className="community-actions">
+                                <button type="button" disabled={Boolean(confirmingBeachId)} onClick={() => askOnSite(beach.id, 'confirm')}>
+                                  {confirmingBeachId === beach.id ? t('Confirmation en cours…') : t('👍 Je confirme')}
+                                </button>
+                                <button type="button" onClick={() => askOnSite(beach.id, 'report')}>
+                                  {t('🔄 La situation a changé')}
+                                </button>
+                              </div>
+                            )}
                             {effectiveUnlock && (selectedBeach === beach.id ? (
                               <div className="report-panel">
                                 <p>
@@ -1124,7 +1212,7 @@ const guestFreeOfferUsed = (() => {
                                 type="button"
                                 className="report-link"
                                 onClick={() =>
-                                  setSelectedBeach(beach.id)
+                                  askOnSite(beach.id, 'report')
                                 }
                               >
                                 {t("Signaler l'état de ce parking")}
@@ -1205,6 +1293,18 @@ const guestFreeOfferUsed = (() => {
         </aside>
       </main>
 
+      {onSiteAction && (
+        <div className="auth-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) setOnSiteAction(null) }}>
+          <section className="auth-dialog community-presence" role="dialog" aria-modal="true" aria-labelledby="presence-title">
+            <h2 id="presence-title">{t('Êtes-vous actuellement sur place ?')}</h2>
+            <div className="community-actions">
+              <button type="button" onClick={acceptOnSite}>{t('Oui, je suis sur place')}</button>
+              <button type="button" onClick={() => { setOnSiteAction(null); setMessage(t('Merci de contribuer uniquement lorsque vous êtes sur place.')) }}>{t('Non, pas actuellement')}</button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {authModalOpen && (
         <div className="auth-backdrop" onMouseDown={(event) => {
           if (event.target === event.currentTarget) setAuthModalOpen(false)
@@ -1218,7 +1318,27 @@ const guestFreeOfferUsed = (() => {
               {userId ? t('Mon compte') : t('Bienvenue sur Begur Plages')}
             </h2>
             {userId ? (
-              <div className="auth-account"><GoogleLogin /></div>
+              <div className="auth-account">
+                <div className="community-profile">
+                  <div className="community-username">
+                    <strong>👤 {community.username || '…'}</strong>
+                    <button type="button" onClick={() => { setUsernameDraft(community.username); setEditingUsername(!editingUsername) }}>{t('Modifier mon pseudonyme')}</button>
+                  </div>
+                  {editingUsername && (
+                    <div className="community-edit">
+                      <input aria-label={t('Mon pseudonyme')} maxLength={20} value={usernameDraft} onChange={(event) => setUsernameDraft(event.target.value)} />
+                      <button type="button" disabled={savingUsername} onClick={() => void saveUsername()}>{t('Enregistrer')}</button>
+                    </div>
+                  )}
+                  <p className="community-badge">🏅 {t(badge)}</p>
+                  <h3>{t('Mes contributions')} : {contributionTotal}</h3>
+                  <p>🟢 {t('Signalements')} : {community.reports}</p>
+                  <p>👍 {t('Confirmations')} : {community.confirmations}</p>
+                  <p>💰 {t('Mes points')} : {pointsBalance ?? '…'}</p>
+                  {nextBadge && <p>🏆 {t('Prochain badge')} : {t(nextBadge)} ({contributionTotal}/{nextThreshold})</p>}
+                </div>
+                <GoogleLogin />
+              </div>
             ) : (
               <>
                 <p className="auth-intro">{t("Connectez-vous pour profiter pleinement des plages de la Costa Brava.")}</p>

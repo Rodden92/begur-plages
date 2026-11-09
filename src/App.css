@@ -675,3 +675,19 @@ a {
 .language-picker select { background: transparent; color: #fffdf7; border: none; font-size: 12px; font-weight: 800; cursor: pointer; max-width: 55px; }
 .language-picker option { color: #10535e; background: #fffdf7; }
 @media (max-width: 440px) { .header-title-row { gap: 7px; } .header-actions { gap: 5px; } .header-login { padding: 9px 8px; font-size: 11px; } .language-picker { padding: 7px 4px; } .site-header h1 { font-size: 24px; } }
+
+/* Communauté — profil et confirmations */
+.community-profile { padding: 14px; margin-bottom: 18px; border: 1px solid #d8e6df; border-radius: 12px; background: #fffdf7; }
+.community-profile h3 { margin: 14px 0 10px; font-size: 1.05rem; }
+.community-profile p { margin: 8px 0; }
+.community-username, .community-edit, .community-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.community-username button, .community-edit button, .community-actions button { cursor: pointer; border: 1px solid #176b76; background: #fff; color: #10535e; border-radius: 8px; padding: 10px 12px; font: inherit; }
+.community-username button { margin-left: auto; }
+.community-edit { margin-top: 10px; }
+.community-edit input { min-width: 0; flex: 1 1 140px; padding: 10px; border: 1px solid #a9c9c6; border-radius: 8px; }
+.community-badge { font-weight: 700; color: #10535e; }
+.community-report-details { display: flex; flex-direction: column; gap: 5px; font-size: 0.88rem; color: #52615f; margin: 8px 0; }
+.community-actions { margin: 12px 0; }
+.community-actions button { flex: 1 1 160px; }
+.community-actions button:disabled { opacity: .6; cursor: wait; }
+.community-presence { max-width: 430px; }
