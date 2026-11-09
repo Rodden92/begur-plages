@@ -7,7 +7,6 @@ import EmailLogin from './EmailLogin'
 import { beachLocations } from './beaches'
 import ReferralTracker from './ReferralTracker'
 import './App.css'
-import { Analytics } from "@vercel/analytics/next"
 
 type Status = 'available' | 'full' | 'unknown'
 type ReportStatus = 'available' | 'full'
