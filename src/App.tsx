@@ -464,10 +464,8 @@ function unlockGuestBeach(beachId: string) {
           return
         }
 
-        setMessage(
-          t("Votre découverte gratuite est terminée. Inscrivez-vous pour continuer.")
-        )
-        return
+        // Le déblocage a expiré : autoriser une nouvelle période de 24 h.
+        localStorage.removeItem(storageKey)
       }
     } catch {
       setMessage(
@@ -959,7 +957,8 @@ const guestFreeOfferUsed = (() => {
 
     return (
       typeof data.beachId === 'string' &&
-      typeof data.expiresAt === 'number'
+      typeof data.expiresAt === 'number' &&
+      data.expiresAt > now
     )
   } catch {
     return false
